@@ -9,7 +9,11 @@ rtl8188eu mac80211 linux driver.
 
 #HOW TO USE
  if you are using r8188eu module, you should unload r8188eu module.
+
   rmmod r8188eu
+  
  make clean
+ 
  make
+ 
  make load
