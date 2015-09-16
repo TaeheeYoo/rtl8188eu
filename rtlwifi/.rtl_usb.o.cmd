@@ -1,1 +1,0 @@
-cmd_/home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl_usb.o := ld -m elf_x86_64   -r -o /home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl_usb.o /home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/usb.o 
