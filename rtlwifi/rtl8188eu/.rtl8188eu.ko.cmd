@@ -1,0 +1,1 @@
+cmd_/home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl8188eu/rtl8188eu.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl8188eu/rtl8188eu.ko /home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl8188eu/rtl8188eu.o /home/ap/Desktop/project/rtl8188eu_mac80211/rtlwifi/rtl8188eu/rtl8188eu.mod.o
