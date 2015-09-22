@@ -908,8 +908,13 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 
 	seq_number = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
 	rtl_get_tcb_desc(hw, info, sta, skb, ptcb_desc);
+#if 0
 	txdesc = (u8 *)skb_push(skb, RTL_TX_HEADER_SIZE);
 	memset(txdesc, 0, RTL_TX_HEADER_SIZE);
+#else
+	txdesc = (u8 *)skb_push(skb, RTL_TX_DESC_SIZE);
+	memset(txdesc, 0, RTL_TX_DESC_SIZE);
+#endif
 	
 	SET_TX_DESC_OWN(txdesc, 1);
 	SET_TX_DESC_LAST_SEG(txdesc, 1);
@@ -922,7 +927,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		SET_TX_DESC_BMC(txdesc, 1);
 	/* TODO */
 	SET_TX_DESC_PKT_OFFSET(txdesc, RTL_DUMMY_OFFSET);
-	SET_TX_DESC_USE_RATE(txdesc, ptcb_desc->use_driver_rate ? 1 : 0);
+	SET_TX_DESC_USE_RATE(txdesc, 1);
 	if (ieee80211_is_data(fc) || ieee80211_is_data_qos(fc)) {
 		SET_TX_DESC_MACID(txdesc, ptcb_desc->mac_id);
 		SET_TX_DESC_QUEUE_SEL(txdesc, fw_qsel);

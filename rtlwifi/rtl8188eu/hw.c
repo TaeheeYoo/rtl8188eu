@@ -519,88 +519,6 @@ static void _Hal_ReadPowerValueFromPROM_8188E(struct ieee80211_hw *hw, struct tx
 	}
 }
 
-#if 0
-static u8 Hal_GetChnlGroup88E(u8 chnl, u8 *pGroup)
-{
-	u8 bIn24G = true;
-
-	if (chnl <= 14) {
-		bIn24G = true;
-
-		if (chnl < 3)			/*  Channel 1-2 */
-			*pGroup = 0;
-		else if (chnl < 6)		/*  Channel 3-5 */
-			*pGroup = 1;
-		else	 if (chnl < 9)		/*  Channel 6-8 */
-			*pGroup = 2;
-		else if (chnl < 12)		/*  Channel 9-11 */
-			*pGroup = 3;
-		else if (chnl < 14)		/*  Channel 12-13 */
-			*pGroup = 4;
-		else if (chnl == 14)		/*  Channel 14 */
-			*pGroup = 5;
-	} else {
-		bIn24G = false;
-
-		if (chnl <= 40)
-			*pGroup = 0;
-		else if (chnl <= 48)
-			*pGroup = 1;
-		else	 if (chnl <= 56)
-			*pGroup = 2;
-		else if (chnl <= 64)
-			*pGroup = 3;
-		else if (chnl <= 104)
-			*pGroup = 4;
-		else if (chnl <= 112)
-			*pGroup = 5;
-		else if (chnl <= 120)
-			*pGroup = 5;
-		else if (chnl <= 128)
-			*pGroup = 6;
-		else if (chnl <= 136)
-			*pGroup = 7;
-		else if (chnl <= 144)
-			*pGroup = 8;
-		else if (chnl <= 153)
-			*pGroup = 9;
-		else if (chnl <= 161)
-			*pGroup = 10;
-		else if (chnl <= 177)
-			*pGroup = 11;
-	}
-	return bIn24G;
-}
-#endif
-
-void Hal_ReadPowerSavingMode88E(struct ieee80211_hw *hw, u8 *hwinfo)
-{
-	/* TODO */
-#if 0
-	if (rtlefuse->autoload_failflag) {
-		padapter->pwrctrlpriv.bHWPowerdown = false;
-		padapter->pwrctrlpriv.bSupportRemoteWakeup = false;
-	} else {
-		/* hw power down mode selection , 0:rf-off / 1:power down */
-
-		if (padapter->registrypriv.hwpdn_mode == 2)
-			padapter->pwrctrlpriv.bHWPowerdown = (hwinfo[EEPROM_RF_FEATURE_OPTION_88E] & BIT4);
-		else
-			padapter->pwrctrlpriv.bHWPowerdown = padapter->registrypriv.hwpdn_mode;
-
-		/*  decide hw if support remote wakeup function */
-		/*  if hw supported, 8051 (SIE) will generate WeakUP signal(D+/D- toggle) when autoresume */
-		padapter->pwrctrlpriv.bSupportRemoteWakeup = (hwinfo[EEPROM_USB_OPTIONAL_FUNCTION0] & BIT1) ? true : false;
-
-		printk("%s...bHWPwrPindetect(%x)-bHWPowerdown(%x) , bSupportRemoteWakeup(%x)\n", __func__,
-		padapter->pwrctrlpriv.bHWPwrPindetect, padapter->pwrctrlpriv.bHWPowerdown , padapter->pwrctrlpriv.bSupportRemoteWakeup);
-
-		printk("### PS params =>  power_mgnt(%x), usbss_enable(%x) ###\n", padapter->registrypriv.power_mgnt, padapter->registrypriv.usbss_enable);
-	}
-#endif
-}
-
-/* TODO */
 static u8 _rtl88e_get_chnl_group(u8 chnl)
 {
 	u8 group = 0;
@@ -629,7 +547,6 @@ void Hal_ReadTxPowerInfo88E(struct ieee80211_hw *hw, u8 *PROMContent)
 	u8 rf_path, index;
 	u8 i;
 
-
 	_Hal_ReadPowerValueFromPROM_8188E(hw, &pwrinfo24g, PROMContent);
 
 	/* TODO !!!!!!!!!!!!!!!!!*/
@@ -638,38 +555,31 @@ void Hal_ReadTxPowerInfo88E(struct ieee80211_hw *hw, u8 *PROMContent)
 		for (ch = 0; ch < 14; ch++) {
 			bIn24G = Hal_GetChnlGroup88E(ch, &group);
 			if (bIn24G) {
-				pHalData->Index24G_CCK_Base[rfPath][ch] = pwrInfo24G.index_cck_base[rfPath][group];
+				pHalData->Index24G_CCK_Base[rfPath][ch] =
+					pwrInfo24G.index_cck_base[rfPath][group];
 				if (ch == 14)
-					pHalData->Index24G_BW40_Base[rfPath][ch] = pwrInfo24G.index_bw40_base[rfPath][4];
+					pHalData->Index24G_BW40_Base[rfPath][ch] =
+						pwrInfo24G.index_bw40_base[rfPath][4];
 				else
-					pHalData->Index24G_BW40_Base[rfPath][ch] = pwrInfo24G.index_bw40_base[rfPath][group];
-			}
-			if (bIn24G) {
-				printk("======= Path %d, Channel %d =======\n", rfPath, ch);
-				printk("Index24G_CCK_Base[%d][%d] = 0x%x\n", rfPath, ch , pHalData->Index24G_CCK_Base[rfPath][ch]);
-				printk("Index24G_BW40_Base[%d][%d] = 0x%x\n", rfPath, ch , pHalData->Index24G_BW40_Base[rfPath][ch]);
+					pHalData->Index24G_BW40_Base[rfPath][ch] =
+						pwrInfo24G.index_bw40_base[rfPath][group];
 			}
 		}
 		for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
-			pHalData->CCK_24G_Diff[rfPath][TxCount] = pwrInfo24G.cck_diff[rfPath][TxCount];
-			pHalData->OFDM_24G_Diff[rfPath][TxCount] = pwrInfo24G.ofdm_diff[rfPath][TxCount];
-			pHalData->BW20_24G_Diff[rfPath][TxCount] = pwrInfo24G.bw20_diff[rfPath][TxCount];
-			pHalData->BW40_24G_Diff[rfPath][TxCount] = pwrInfo24G.bw40_diff[rfPath][TxCount];
-			printk("======= TxCount %d =======\n", TxCount);
-			printk("CCK_24G_Diff[%d][%d] = %d\n", rfPath, TxCount, pHalData->CCK_24G_Diff[rfPath][TxCount]);
-			printk("OFDM_24G_Diff[%d][%d] = %d\n", rfPath, TxCount, pHalData->OFDM_24G_Diff[rfPath][TxCount]);
-			printk("BW20_24G_Diff[%d][%d] = %d\n", rfPath, TxCount, pHalData->BW20_24G_Diff[rfPath][TxCount]);
-			printk("BW40_24G_Diff[%d][%d] = %d\n", rfPath, TxCount, pHalData->BW40_24G_Diff[rfPath][TxCount]);
+			pHalData->CCK_24G_Diff[rfPath][TxCount] =
+				pwrInfo24G.cck_diff[rfPath][TxCount];
+			pHalData->OFDM_24G_Diff[rfPath][TxCount] =
+				pwrInfo24G.ofdm_diff[rfPath][TxCount];
+			pHalData->BW20_24G_Diff[rfPath][TxCount] =
+				pwrInfo24G.bw20_diff[rfPath][TxCount];
+			pHalData->BW40_24G_Diff[rfPath][TxCount] =
+				pwrInfo24G.bw40_diff[rfPath][TxCount];
 		}
 	}
 #else
 	for (rf_path = 0; rf_path < 2; rf_path++) {
 		for (i = 0; i < 14; i++) {
-#if 1
 			index = _rtl88e_get_chnl_group(i+1);
-#else
-			index = Hal_GetChnlGroup88E(ch, pGroup);
-#endif
 
 			rtlefuse->txpwrlevel_cck[rf_path][i] =
 				pwrinfo24g.index_cck_base[rf_path][index];
