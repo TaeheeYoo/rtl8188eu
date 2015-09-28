@@ -1656,7 +1656,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 		return status;
 	}
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Initializeadapt8192CSdio(): Download Firmware Success!!\n");
-	rtlhal->fw_ready = true;
+	//rtlhal->fw_ready = true;
 	rtlhal->last_hmeboxnum = 0;
 	rtlphy->iqk_initialized = false;
 	rtlphy->pwrgroup_cnt = 0;
