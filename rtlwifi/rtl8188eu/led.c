@@ -23,6 +23,7 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
@@ -32,7 +33,7 @@
 #include "reg.h"
 #include "led.h"
 
-static void _rtl88ee_init_led(struct ieee80211_hw *hw,
+static void _rtl88eu_init_led(struct ieee80211_hw *hw,
 			      struct rtl_led *pled, enum rtl_led_pin ledpin)
 {
 	pled->hw = hw;
@@ -40,7 +41,7 @@ static void _rtl88ee_init_led(struct ieee80211_hw *hw,
 	pled->ledon = false;
 }
 
-void rtl88ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+void rtl88eu_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
 {
 	u8 ledcfg;
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -57,8 +58,6 @@ void rtl88ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
 			       REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5) | BIT(6));
 		break;
 	case LED_PIN_LED1:
-		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG1);
-		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
 		break;
 	default:
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
@@ -68,7 +67,7 @@ void rtl88ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
 	pled->ledon = true;
 }
 
-void rtl88ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+void rtl88eu_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_usb_priv *usbpriv = rtl_usbpriv(hw);
@@ -82,21 +81,17 @@ void rtl88ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
 		break;
 	case LED_PIN_LED0:
 		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
-		ledcfg &= 0xf0;
 		if (usbpriv->ledctl.led_opendrain) {
-			rtl_write_byte(rtlpriv, REG_LEDCFG2,
-				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
+			ledcfg &= 0x90;
+			rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
 			ledcfg = rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG);
-			rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG,
-				       (ledcfg & 0xFE));
+			ledcfg &= 0xfe;
+			rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, ledcfg);
 		} else
 			rtl_write_byte(rtlpriv, REG_LEDCFG2,
 				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
 		break;
 	case LED_PIN_LED1:
-		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG1);
-		ledcfg &= 0x10;
-		rtl_write_byte(rtlpriv, REG_LEDCFG1, (ledcfg | BIT(3)));
 		break;
 	default:
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
@@ -106,19 +101,17 @@ void rtl88ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
 	pled->ledon = false;
 }
 
-void rtl88ee_init_sw_leds(struct ieee80211_hw *hw)
+void rtl88eu_init_sw_leds(struct ieee80211_hw *hw)
 {
 	struct rtl_usb_priv *usbpriv = rtl_usbpriv(hw);
-	_rtl88ee_init_led(hw, &usbpriv->ledctl.sw_led0, LED_PIN_LED0);
-	_rtl88ee_init_led(hw, &usbpriv->ledctl.sw_led1, LED_PIN_LED1);
+	_rtl88eu_init_led(hw, &usbpriv->ledctl.sw_led0, LED_PIN_LED0);
 }
 
-void rtl88ee_deinit_sw_leds(struct ieee80211_hw *hw)
+void rtl88eu_deinit_sw_leds(struct ieee80211_hw *hw)
 {
 }
 
-
-static void _rtl88ee_sw_led_control(struct ieee80211_hw *hw,
+static void _rtl88eu_sw_led_control(struct ieee80211_hw *hw,
 				    enum led_ctl_mode ledaction)
 {
 	struct rtl_usb_priv *usbpriv = rtl_usbpriv(hw);
@@ -127,17 +120,17 @@ static void _rtl88ee_sw_led_control(struct ieee80211_hw *hw,
 	case LED_CTL_POWER_ON:
 	case LED_CTL_LINK:
 	case LED_CTL_NO_LINK:
-		rtl88ee_sw_led_on(hw, pLed0);
+		rtl88eu_sw_led_on(hw, pLed0);
 		break;
 	case LED_CTL_POWER_OFF:
-		rtl88ee_sw_led_off(hw, pLed0);
+		rtl88eu_sw_led_off(hw, pLed0);
 		break;
 	default:
 		break;
 	}
 }
 
-void rtl88ee_led_control(struct ieee80211_hw *hw,
+void rtl88eu_led_control(struct ieee80211_hw *hw,
 			enum led_ctl_mode ledaction)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -155,5 +148,5 @@ void rtl88ee_led_control(struct ieee80211_hw *hw,
 	}
 	RT_TRACE(rtlpriv, COMP_LED, DBG_TRACE, "ledaction %d,\n",
 				ledaction);
-	_rtl88ee_sw_led_control(hw, ledaction);
+	_rtl88eu_sw_led_control(hw, ledaction);
 }

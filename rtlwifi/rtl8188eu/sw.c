@@ -23,6 +23,7 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
@@ -151,11 +152,11 @@ static struct rtl_hal_ops rtl8188eu_hal_ops = {
 	.dm_watchdog = rtl88e_dm_watchdog,
 	.scan_operation_backup = rtl_phy_scan_operation_backup,
 	.set_rf_power_state = rtl88e_phy_set_rf_power_state,
-	.led_control = rtl88ee_led_control,
+	.led_control = rtl88eu_led_control,
 	.enable_hw_sec = rtl88eu_enable_hw_security_config,
 	.set_key = rtl88eu_set_key,
-	.init_sw_leds = rtl88ee_init_sw_leds,
-	.deinit_sw_leds = rtl88ee_deinit_sw_leds,
+	.init_sw_leds = rtl88eu_init_sw_leds,
+	.deinit_sw_leds = rtl88eu_deinit_sw_leds,
 	.get_bbreg = rtl88e_phy_query_bb_reg,
 	.set_bbreg = rtl88e_phy_set_bb_reg,
 	.get_rfreg = rtl88e_phy_query_rf_reg,

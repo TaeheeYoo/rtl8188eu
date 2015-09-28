@@ -19,17 +19,18 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmai.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
 
-#ifndef __RTL92CE_LED_H__
-#define __RTL92CE_LED_H__
+#ifndef __RTL88EU_LED_H__
+#define __RTL88EU_LED_H__
 
-void rtl88ee_init_sw_leds(struct ieee80211_hw *hw);
-void rtl88ee_deinit_sw_leds(struct ieee80211_hw *hw);
-void rtl88ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
-void rtl88ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
-void rtl88ee_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
+void rtl88eu_init_sw_leds(struct ieee80211_hw *hw);
+void rtl88eu_deinit_sw_leds(struct ieee80211_hw *hw);
+void rtl88eu_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
+void rtl88eu_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
+void rtl88eu_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
 
 #endif
