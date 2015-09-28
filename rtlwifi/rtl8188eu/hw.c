@@ -1101,6 +1101,7 @@ static int _rtl88eu_set_media_status(struct ieee80211_hw *hw,
 	u8 bt_msr = rtl_read_byte(rtlpriv, MSR);
 	enum led_ctl_mode ledaction = LED_CTL_NO_LINK;
 
+#if 0
 	bt_msr &= 0xfc;
 	if (type == NL80211_IFTYPE_UNSPECIFIED || type ==
 	    NL80211_IFTYPE_STATION) {
@@ -1148,6 +1149,75 @@ static int _rtl88eu_set_media_status(struct ieee80211_hw *hw,
 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
 	else
 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+#else
+	rtl_write_byte(rtlpriv, REG_BCN_CTRL,
+		       rtl_read_byte(rtlpriv, REG_BCN_CTRL) | BIT(4));
+	bt_msr &= 0x0c;
+	switch (type) {
+	case NL80211_IFTYPE_UNSPECIFIED:
+		bt_msr |= MSR_NOLINK;
+		ledaction = LED_CTL_LINK;
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
+			 "Set Network type to NO LINK!\n");
+		break;
+	case NL80211_IFTYPE_ADHOC:
+		bt_msr |= MSR_ADHOC;
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
+			 "Set Network type to Ad Hoc!\n");
+		break;
+	case NL80211_IFTYPE_STATION:
+		bt_msr |= MSR_INFRA;
+		ledaction = LED_CTL_LINK;
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
+			 "Set Network type to STA!\n");
+		break;
+	case NL80211_IFTYPE_AP:
+		bt_msr |= MSR_AP;
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
+			 "Set Network type to AP!\n");
+		break;
+	default:
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+			 "Network type %d not supported!\n", type);
+		goto error_out;
+	}
+	rtl_write_byte(rtlpriv, MSR, bt_msr);
+	rtlpriv->cfg->ops->led_control(hw, ledaction);
+
+	if (type == NL80211_IFTYPE_UNSPECIFIED ||
+	    type == NL80211_IFTYPE_STATION) {
+		_rtl88eu_stop_tx_beacon(hw);
+		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x19);
+	} else if (type == NL80211_IFTYPE_ADHOC) {
+		_rtl88eu_resume_tx_beacon(hw);
+		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x1a);
+	} else if (type == NL80211_IFTYPE_AP) {
+		_rtl88eu_resume_tx_beacon(hw);
+		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x12);
+		rtl_write_dword(rtlpriv, REG_RCR, 0x7000208e);
+		rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0xFFFF);
+		rtl_write_word(rtlpriv, REG_RXFLTMAP1, 0x0400);
+		rtl_write_byte(rtlpriv, REG_BCNDMATIM, 0x02);
+		rtl_write_byte(rtlpriv, REG_ATIMWND, 0x0a);
+		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x00);
+		rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0xff04);
+		rtl_write_word(rtlpriv, REG_TSFTR_SYN_OFFSET, 0x7fff);
+		rtl_write_byte(rtlpriv, REG_DUAL_TSF_RST, BIT(0));
+		rtl_write_byte(rtlpriv, REG_MBID_NUM,
+			       rtl_read_byte(rtlpriv, REG_MBID_NUM) |
+					     BIT(3) | BIT(4));
+		rtl_write_byte(rtlpriv, REG_BCN_CTRL,
+			       (DIS_TSF_UDT0_NORMAL_CHIP|EN_BCN_FUNCTION |
+				BIT(1)));
+		rtl_write_byte(rtlpriv, REG_BCN_CTRL_1,
+			       rtl_read_byte(rtlpriv, REG_BCN_CTRL_1) | BIT(0));
+
+	} else {
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+			 "Set HW_VAR_MEDIA_STATUS:No such media status(%x)\n",
+			 type);
+	}
+#endif
 	return 0;
 error_out:
 	return 1;
