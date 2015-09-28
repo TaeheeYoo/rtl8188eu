@@ -648,12 +648,7 @@ static void _rtl_rx_completed(struct urb *_urb)
 		unsigned int size = _urb->actual_length;
 		struct ieee80211_hdr *hdr;
 
-		/* TODO */
-#if 0
 		if (size < RTL_RX_DESC_SIZE + sizeof(struct ieee80211_hdr)) {
-#else
-		if (size < RTL_RX_DESC_SIZE) {
-#endif
 			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
 				 "Too short packet from bulk IN! (len: %d)\n",
 				 size);

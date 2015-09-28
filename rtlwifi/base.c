@@ -335,10 +335,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
 				sizeof(struct ieee80211_supported_band));
 
 		/* <3> init ht cap base on ant_num */
-		/* TODO */
-#if 1
 		_rtl_init_hw_ht_capab(hw, &sband->ht_cap);
-#endif
 
 		/* <4> set mac->sband to wiphy->sband */
 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;

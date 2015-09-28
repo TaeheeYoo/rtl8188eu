@@ -179,14 +179,14 @@ module_param_named(debug, rtl88eu_mod_params.debug, int, 0444);
 MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
 MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
 
-#define RTL88e_USB_BULK_IN_NUM			1
-#define RTL88e_NUM_RX_URBS			32
-#define RTL88e_NUM_TX_URBS			1
+#define RTL88E_USB_BULK_IN_NUM			1
+#define RTL88E_NUM_RX_URBS			32
+#define RTL88E_NUM_TX_URBS			1
 
 static struct rtl_hal_usbint_cfg rtl88eu_interface_cfg = {
 	/* rx */
-	.in_ep_num = RTL88e_USB_BULK_IN_NUM,
-	.rx_urb_num = RTL88e_NUM_RX_URBS,
+	.in_ep_num = RTL88E_USB_BULK_IN_NUM,
+	.rx_urb_num = RTL88E_NUM_RX_URBS,
 	.rx_max_size = 15368,
 	.usb_rx_hdl = rtl8188eu_rx_hdl,
 	.usb_rx_segregate_hdl = NULL, /* rtl8188eu_rx_segregate_hdl; */
@@ -300,18 +300,25 @@ static struct rtl_hal_cfg rtl88eu_hal_cfg = {
 
 /* 2010-10-19 DID_USB_V3.4 */
 static struct usb_device_id rtl8188eu_usb_ids[] = {
-	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8179, rtl88eu_hal_cfg)}, /* 8188EUS */
-	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x0179, rtl88eu_hal_cfg)}, /* 8188ETV */
+	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8179, rtl88eu_hal_cfg)},
+	/* 8188EUS */
+	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x0179, rtl88eu_hal_cfg)},
+	/* 8188ETV */
 	/*=== Customer ID ===*/
 	/****** 8188EUS ********/
-	{RTL_USB_DEVICE(0x056e, 0x4008, rtl88eu_hal_cfg)}, /* Elecom WDC-150SU2M */
-	{RTL_USB_DEVICE(0x07b8, 0x8179, rtl88eu_hal_cfg)}, /* Abocom - Abocom */
-	{RTL_USB_DEVICE(0x2001, 0x330F, rtl88eu_hal_cfg)}, /* DLink DWA-125 REV D1 */
-	{RTL_USB_DEVICE(0x2001, 0x3310, rtl88eu_hal_cfg)}, /* Dlink DWA-123 REV D1 */
-	{RTL_USB_DEVICE(0x2001, 0x3311, rtl88eu_hal_cfg)}, /* DLink GO-USB-N150 REV B1 */
-	{RTL_USB_DEVICE(0x0df6, 0x0076, rtl88eu_hal_cfg)}, /* Sitecom N150 v2 */
-
-	{}	/* Terminating entry */
+	{RTL_USB_DEVICE(0x056e, 0x4008, rtl88eu_hal_cfg)},
+	/* Elecom WDC-150SU2M */
+	{RTL_USB_DEVICE(0x07b8, 0x8179, rtl88eu_hal_cfg)},
+	/* Abocom - Abocom */
+	{RTL_USB_DEVICE(0x2001, 0x330F, rtl88eu_hal_cfg)},
+	/* DLink DWA-125 REV D1 */
+	{RTL_USB_DEVICE(0x2001, 0x3310, rtl88eu_hal_cfg)},
+	/* Dlink DWA-123 REV D1 */
+	{RTL_USB_DEVICE(0x2001, 0x3311, rtl88eu_hal_cfg)},
+	/* DLink GO-USB-N150 REV B1 */
+	{RTL_USB_DEVICE(0x0df6, 0x0076, rtl88eu_hal_cfg)},
+	/* Sitecom N150 v2 */
+	{}/* Terminating entry */
 
 };
 
