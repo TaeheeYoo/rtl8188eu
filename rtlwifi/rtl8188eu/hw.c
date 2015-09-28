@@ -1370,7 +1370,6 @@ static void usb_AggSettingTxUpdate(struct ieee80211_hw *hw)
 static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)
 {
 	/* TODO */
-#if 1
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
@@ -1412,7 +1411,7 @@ static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)
 		rtl_write_byte(rtlpriv, REG_RXDMA_AGG_PG_TH+1, 4);
 		break;
 	case USB_RX_AGG_USB:
-		rtl_write_byte(rtlpriv, REG_USB_AGG_TH, 512);
+		rtl_write_byte(rtlpriv, REG_USB_AGG_TH, 8);
 		rtl_write_byte(rtlpriv, REG_USB_AGG_TO, 6);
 		break;
 	case USB_RX_AGG_DMA_USB:
@@ -1423,47 +1422,17 @@ static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)
 		break;
 	case USB_RX_AGG_DISABLE:
 	default:
-		/*  TODO: */
 		break;
 	}
-	/* TODO */
-#if 0
-
-	switch (PBP_128) {
-	case PBP_128:
-		haldata->HwRxPageSize = 128;
-		break;
-	case PBP_64:
-		haldata->HwRxPageSize = 64;
-		break;
-	case PBP_256:
-		haldata->HwRxPageSize = 256;
-		break;
-	case PBP_512:
-		haldata->HwRxPageSize = 512;
-		break;
-	case PBP_1024:
-		haldata->HwRxPageSize = 1024;
-		break;
-	default:
-		break;
-	}
-#endif
-#endif
-}	/*  usb_AggSettingRxUpdate */
+}
 
 static void InitUsbAggregationSetting(struct ieee80211_hw *hw)
 {
 
 	/* TODO */
 #if 1
-	/*  Tx aggregation setting */
 	usb_AggSettingTxUpdate(hw);
-
-	/*  Rx aggregation setting */
 	usb_AggSettingRxUpdate(hw);
-
-	/*  201/12/10 MH Add for USB agg mode dynamic switch. */
 	//haldata->UsbRxHighSpeedMode = false;
 #endif
 }
@@ -1474,18 +1443,11 @@ static void _InitBeaconParameters(struct ieee80211_hw *hw)
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
 
-
 	rtl_write_word(rtlpriv, REG_BCN_CTRL, 0x1010);
-
-	/*  TODO: Remove these magic number */
-	rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0x6404);/*  ms */
-	rtl_write_byte(rtlpriv, REG_DRVERLYINT, DRIVER_EARLY_INT_TIME);/*  5ms */
-	rtl_write_byte(rtlpriv, REG_BCNDMATIM, BCN_DMA_ATIME_INT_TIME); /*  2ms */
-
-	/*  Suggested by designer timchen. Change beacon AIFS to the largest number */
-	/*  beacause test chip does not contension before sending beacon. by tynli. 2009.11.03 */
+	rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0x6404);
+	rtl_write_byte(rtlpriv, REG_DRVERLYINT, DRIVER_EARLY_INT_TIME);
+	rtl_write_byte(rtlpriv, REG_BCNDMATIM, BCN_DMA_ATIME_INT_TIME);
 	rtl_write_word(rtlpriv, REG_BCNTCFG, 0x660F);
-
 	rtlusb->reg_bcn_ctrl_val = rtl_read_byte(rtlpriv, REG_BCN_CTRL);
 }
 
@@ -1495,20 +1457,14 @@ static void _BeaconFunctionEnable(struct ieee80211_hw *hw,
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 
 	rtl_write_byte(rtlpriv, REG_BCN_CTRL, (BIT(4) | BIT(3) | BIT(1)));
-
 	rtl_write_byte(rtlpriv, REG_RD_CTRL+1, 0x6F);
 }
 
-/*  Set CCK and OFDM Block "ON" */
 static void _BBTurnOnBlock(struct ieee80211_hw *hw)
 {
 	rtl_set_bbreg(hw, RFPGA0_RFMOD, BCCKEN, 0x1);
 	rtl_set_bbreg(hw, RFPGA0_RFMOD, BOFDMEN, 0x1);
 }
-
-/* TODO */
-#define Antenna_A	1
-#define Antenna_B	2
 
 static void _InitAntenna_Selection(struct ieee80211_hw *hw)
 {
@@ -1519,34 +1475,11 @@ static void _InitAntenna_Selection(struct ieee80211_hw *hw)
 		return;
 	//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==>  %s ....\n", __func__);
 
-	rtl_write_dword(rtlpriv, REG_LEDCFG0, rtl_read_dword(rtlpriv, REG_LEDCFG0)|BIT(23));
+	rtl_write_dword(rtlpriv, REG_LEDCFG0,
+			rtl_read_dword(rtlpriv, REG_LEDCFG0)|BIT(23));
 	rtl_set_bbreg(hw, RFPGA0_XAB_RFPARAMETER, BIT(13), 0x01);
-
-	/* TODO */
-#if 0
-	if (rtl_get_bbreg(hw, RFPGA0_XA_RFINTERFACEOE, 0x300) == Antenna_A)
-		haldata->CurAntenna = Antenna_A;
-	else
-		haldata->CurAntenna = Antenna_B;
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"%s,Cur_ant:(%x)%s\n", __func__, haldata->CurAntenna, (haldata->CurAntenna == Antenna_A) ? "Antenna_A" : "Antenna_B");
-#endif
 }
 
-/*-----------------------------------------------------------------------------
- * Function:	HwSuspendModeEnable92Cu()
- *
- * Overview:	HW suspend mode switch.
- *
- * Input:		NONE
- *
- * Output:	NONE
- *
- * Return:	NONE
- *
- * Revised History:
- *	When		Who		Remark
- *	08/23/2010	MHC		HW suspend mode switch test..
- *---------------------------------------------------------------------------*/
 enum rf_pwrstate RfOnOffDetect(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -1558,14 +1491,14 @@ enum rf_pwrstate RfOnOffDetect(struct ieee80211_hw *hw)
 		val8 = rtl_read_byte(rtlpriv, REG_HSISR);
 		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"pwrdown, 0x5c(BIT(7))=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(7)) ? ERFOFF : ERFON;
-	} else { /*  rf on/off */
+	} else {
 		rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG)&~(BIT(3)));
 		val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
 		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"GPIO_IN=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(3)) ? ERFON: ERFOFF;
 	}
 	return rfpowerstate;
-}	/*  HalDetectPwrDownMode */
+}
 
 static int _rtl88eu_init_mac(struct ieee80211_hw *hw)
 {
@@ -1577,7 +1510,8 @@ static int _rtl88eu_init_mac(struct ieee80211_hw *hw)
 	
 	err = rtl8188eu_InitPowerOn(hw);
 	if (err == false) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init power on!\n");
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+			 "Failed to init power on!\n");
 		return err;
 	}
 
@@ -1590,7 +1524,8 @@ static int _rtl88eu_init_mac(struct ieee80211_hw *hw)
 
 	if (false == InitLLTTable(hw, boundary)) {
 	
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init LLT table\n");
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+			 "Failed to init LLT table\n");
 		return -EINVAL;
 	}
 
@@ -1651,11 +1586,13 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	}
 	status = rtl88e_download_fw(hw, false);
 	if (status) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,"Download Firmware failed!!\n");
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+			 "Download Firmware failed!!\n");
 		status = 1;
 		return status;
 	}
-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Initializeadapt8192CSdio(): Download Firmware Success!!\n");
+	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+		 "Download Firmware Success!!\n");
 	//rtlhal->fw_ready = true;
 	rtlhal->last_hmeboxnum = 0;
 	rtlphy->iqk_initialized = false;
@@ -1675,11 +1612,11 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 						 RF_CHNLBW, bRFRegOffsetMask);
 	rtlphy->rfreg_chnlval[1] = rtl_get_rfreg(hw, (enum radio_path)1,
 						 RF_CHNLBW, bRFRegOffsetMask);
-#else
 #endif
 	status = rtl8188e_iol_efuse_patch(hw);
 	if (status == false) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,"rtl8188e_iol_efuse_patch failed\n");
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+			 "rtl8188e_iol_efuse_patch failed\n");
 		goto exit;
 	}
 
@@ -1711,7 +1648,8 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl_write_byte(rtlpriv, REG_EARLY_MODE_CONTROL+3, 0x01);
 	rtl_write_word(rtlpriv, REG_TX_RPT_TIME, 0x3DF0);
 	rtl_write_word(rtlpriv, REG_TXDMA_OFFSET_CHK,
-		       (rtl_read_word(rtlpriv, REG_TXDMA_OFFSET_CHK) | DROP_DATA_EN));
+		       (rtl_read_word(rtlpriv, REG_TXDMA_OFFSET_CHK) |
+			DROP_DATA_EN));
 	if (ppsc->rfpwr_state == ERFON) {
 		if ((rtlefuse->antenna_div_type == CGCS_RX_HW_ANTDIV) ||
 		    ((rtlefuse->antenna_div_type == CG_TRX_HW_ANTDIV) &&
@@ -1854,55 +1792,7 @@ void rtl88eu_card_disable(struct ieee80211_hw *hw)
 	}
 
 	rtlpriv->phy.iqk_initialized = false;
- }
-
-/* TODO */
-#if 0
-static unsigned int rtl8188eu_inirp_init(struct ieee80211_hw *hw)
-{
-	u8 i;
-	struct recv_buf *precvbuf;
-	uint	status;
-
-	status = true;
-
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
-		 ("===> usb_inirp_init\n"));
-
-	precvpriv->ff_hwaddr = RECV_BULK_IN_ADDR;
-
-	/* issue Rx irp to receive data */
-	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
-	for (i = 0; i < NR_RECVBUFF; i++) {
-		if (usb_read_port(Adapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf) == false) {
-			//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING, ("usb_rx_init: usb_read_port error\n"));
-			status = false;
-			goto exit;
-		}
-
-		precvbuf++;
-		precvpriv->freu_recv_buf_queue_cnt--;
-	}
-
-exit:
-
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD, ("<=== usb_inirp_init\n"));
-
-
-	return status;
 }
-
-static unsigned int rtl8188eu_inirp_deinit(struct ieee80211_hw *hw)
-{
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD, ("\n ===> usb_rx_deinit\n"));
-
-	usb_read_port_cancel(Adapter);
-
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD, ("\n <=== usb_rx_deinit\n"));
-
-	return true;
-}
-#endif
 
 void rtl88eu_read_eeprom_info(struct ieee80211_hw *hw)
 {
@@ -1990,575 +1880,6 @@ static void hw_var_set_opmode(struct ieee80211_hw *hw, u8 variable, u8 *val)
 }
 #endif
 
-#if 0
-static void SetHwReg8188EU(struct ieee80211_hw *hw, u8 variable, u8 *val)
-{
-
-	switch (variable) {
-	case HW_VAR_MEDIA_STATUS:
-		{
-			u8 val8;
-
-			val8 = rtl_read_byte(rtlpriv, MSR)&0x0c;
-			val8 |= *((u8 *)val);
-			rtl_write_byte(rtlpriv, MSR, val8);
-		}
-		break;
-	case HW_VAR_MEDIA_STATUS1:
-		{
-			u8 val8;
-
-			val8 = rtl_read_byte(rtlpriv, MSR) & 0x03;
-			val8 |= *((u8 *)val) << 2;
-			rtl_write_byte(rtlpriv, MSR, val8);
-		}
-		break;
-	case HW_VAR_SET_OPMODE:
-		hw_var_set_opmode(hw, variable, val);
-		break;
-	case HW_VAR_MAC_ADDR:
-		hw_var_set_macaddr(hw, variable, val);
-		break;
-	case HW_VAR_BSSID:
-		hw_var_set_bssid(hw, variable, val);
-		break;
-	case HW_VAR_BASIC_RATE:
-		{
-			u16 BrateCfg = 0;
-			u8 RateIndex = 0;
-
-			/*  2007.01.16, by Emily */
-			/*  Select RRSR (in Legacy-OFDM and CCK) */
-			/*  For 8190, we select only 24M, 12M, 6M, 11M, 5.5M, 2M, and 1M from the Basic rate. */
-			/*  We do not use other rates. */
-			HalSetBrateCfg(hw, val, &BrateCfg);
-			//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"HW_VAR_BASIC_RATE: BrateCfg(%#x)\n", BrateCfg);
-
-			/* 2011.03.30 add by Luke Lee */
-			/* CCK 2M ACK should be disabled for some BCM and Atheros AP IOT */
-			/* because CCK 2M has poor TXEVM */
-			/* CCK 5.5M & 11M ACK should be enabled for better performance */
-
-			BrateCfg = (BrateCfg | 0xd) & 0x15d;
-
-			BrateCfg |= 0x01; /*  default enable 1M ACK rate */
-			/*  Set RRSR rate table. */
-			rtl_write_byte(rtlpriv, REG_RRSR, BrateCfg & 0xff);
-			rtl_write_byte(rtlpriv, REG_RRSR+1, (BrateCfg >> 8) & 0xff);
-			rtl_write_byte(rtlpriv, REG_RRSR+2, rtl_read_byte(rtlpriv, REG_RRSR+2)&0xf0);
-
-			/*  Set RTS initial rate */
-			while (BrateCfg > 0x1) {
-				BrateCfg >>= 1;
-				RateIndex++;
-			}
-			/*  Ziv - Check */
-			rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, RateIndex);
-		}
-		break;
-	case HW_VAR_TXPAUSE:
-		rtl_write_byte(rtlpriv, REG_TXPAUSE, *((u8 *)val));
-		break;
-	case HW_VAR_BCN_FUNC:
-		hw_var_set_bcn_func(hw, variable, val);
-		break;
-	case HW_VAR_CORRECT_TSF:
-		{
-			u64	tsf;
-			tsf = pmlmeext->TSFValue - rtw_modular64(pmlmeext->TSFValue, (pmlmeinfo->bcn_interval*1024)) - 1024; /* us */
-
-			if (((pmlmeinfo->state&0x03) == WIFI_FW_ADHOC_STATE) || ((pmlmeinfo->state&0x03) == WIFI_FW_AP_STATE))
-				_rtl88eu_stop_tx_beacon(hw);
-
-			/* disable related TSF function */
-			rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)&(~BIT(3)));
-
-			rtl_write_dword(rtlpriv, REG_TSFTR, tsf);
-			rtl_write_dword(rtlpriv, REG_TSFTR+4, tsf>>32);
-
-			/* enable related TSF function */
-			rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)|BIT(3));
-
-			if (((pmlmeinfo->state&0x03) == WIFI_FW_ADHOC_STATE) || ((pmlmeinfo->state&0x03) == WIFI_FW_AP_STATE))
-				_rtl88eu_resume_tx_beacon(hw);
-		}
-		break;
-	case HW_VAR_CHECK_BSSID:
-		if (*((u8 *)val)) {
-			rtl_write_dword(rtlpriv, REG_RCR, rtl_read_dword(rtlpriv, REG_RCR)|RCR_CBSSID_DATA|RCR_CBSSID_BCN);
-		} else {
-			u32 val32;
-
-			val32 = rtl_read_dword(rtlpriv, REG_RCR);
-
-			val32 &= ~(RCR_CBSSID_DATA | RCR_CBSSID_BCN);
-
-			rtl_write_dword(rtlpriv, REG_RCR, val32);
-		}
-		break;
-	case HW_VAR_MLME_DISCONNECT:
-		/* Set RCR to not to receive data frame when NO LINK state */
-		/* reject all data frames */
-		rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0x00);
-
-		/* reset TSF */
-		rtl_write_byte(rtlpriv, REG_DUAL_TSF_RST, (BIT(0)|BIT(1)));
-
-		/* disable update TSF */
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)|BIT(4));
-		break;
-	case HW_VAR_MLME_SITESURVEY:
-/* TODO */
-#if 0
-		if (*((u8 *)val)) { /* under sitesurvey */
-			/* config RCR to receive different BSSID & not to receive data frame */
-			u32 v = rtl_read_dword(rtlpriv, REG_RCR);
-			v &= ~(RCR_CBSSID_BCN);
-			rtl_write_dword(rtlpriv, REG_RCR, v);
-			/* reject all data frame */
-			rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0x00);
-
-			/* disable update TSF */
-			rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)|BIT(4));
-		} else { /* sitesurvey done */
-			struct mlme_ext_priv	*pmlmeext = &Adapter->mlmeextpriv;
-			struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-
-			if ((is_client_associated_to_ap(Adapter)) ||
-			    ((pmlmeinfo->state&0x03) == WIFI_FW_ADHOC_STATE)) {
-				/* enable to rx data frame */
-				rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0xFFFF);
-
-				/* enable update TSF */
-				rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)&(~BIT(4)));
-			} else if ((pmlmeinfo->state&0x03) == WIFI_FW_AP_STATE) {
-				rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0xFFFF);
-				/* enable update TSF */
-				rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)&(~BIT(4)));
-			}
-			if ((pmlmeinfo->state&0x03) == WIFI_FW_AP_STATE) {
-				rtl_write_dword(rtlpriv, REG_RCR, rtl_read_dword(rtlpriv, REG_RCR)|RCR_CBSSID_BCN);
-			} else {
-				if (Adapter->in_cta_test) {
-					u32 v = rtl_read_dword(rtlpriv, REG_RCR);
-					v &= ~(RCR_CBSSID_DATA | RCR_CBSSID_BCN);/*  RCR_ADF */
-					rtl_write_dword(rtlpriv, REG_RCR, v);
-				} else {
-					rtl_write_dword(rtlpriv, REG_RCR, rtl_read_dword(rtlpriv, REG_RCR)|RCR_CBSSID_BCN);
-				}
-			}
-		}
-		break;
-	case HW_VAR_MLME_JOIN:
-		{
-			u8 RetryLimit = 0x30;
-			u8 type = *((u8 *)val);
-			struct mlme_priv	*pmlmepriv = &Adapter->mlmepriv;
-
-			if (type == 0) { /*  prepare to join */
-				/* enable to rx data frame.Accept all data frame */
-				rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0xFFFF);
-
-				if (Adapter->in_cta_test) {
-					u32 v = rtl_read_dword(rtlpriv, REG_RCR);
-					v &= ~(RCR_CBSSID_DATA | RCR_CBSSID_BCN);/*  RCR_ADF */
-					rtl_write_dword(rtlpriv, REG_RCR, v);
-				} else {
-					rtl_write_dword(rtlpriv, REG_RCR, rtl_read_dword(rtlpriv, REG_RCR)|RCR_CBSSID_DATA|RCR_CBSSID_BCN);
-				}
-
-				if (check_fwstate(pmlmepriv, WIFI_STATION_STATE))
-					RetryLimit = (haldata->CustomerID == RT_CID_CCX) ? 7 : 48;
-				else /*  Ad-hoc Mode */
-					RetryLimit = 0x7;
-			} else if (type == 1) {
-				/* joinbss_event call back when join res < 0 */
-				rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0x00);
-			} else if (type == 2) {
-				/* sta add event call back */
-				/* enable update TSF */
-				rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)&(~BIT(4)));
-
-				if (check_fwstate(pmlmepriv, WIFI_ADHOC_STATE|WIFI_ADHOC_MASTER_STATE))
-					RetryLimit = 0x7;
-			}
-			rtl_write_word(rtlpriv, REG_RL, RetryLimit << RETRY_LIMIT_SHORT_SHIFT | RetryLimit << RETRY_LIMIT_LONG_SHIFT);
-		}
-		break;
-#endif
-	case HW_VAR_BEACON_INTERVAL:
-		rtl_write_word(rtlpriv, REG_BCN_INTERVAL, *((u16 *)val));
-		break;
-	case HW_VAR_SLOT_TIME:
-		{
-			u8 u1bAIFS, aSifsTime;
-			rtl_write_byte(rtlpriv, REG_SLOT, val[0]);
-
-			if (rtlusb->wmm_enable == 0) {
-				/* TODO */
-#if 0
-				if (pmlmeext->cur_wireless_mode == WIRELESS_11B)
-					aSifsTime = 10;
-				else
-					aSifsTime = 16;
-
-				u1bAIFS = aSifsTime + (2 * pmlmeinfo->slotTime);
-
-				/*  <Roger_EXP> Temporary removed, 2008.06.20. */
-				rtl_write_byte(rtlpriv, REG_EDCA_VO_PARAM, u1bAIFS);
-				rtl_write_byte(rtlpriv, REG_EDCA_VI_PARAM, u1bAIFS);
-				rtl_write_byte(rtlpriv, REG_EDCA_BE_PARAM, u1bAIFS);
-				rtl_write_byte(rtlpriv, REG_EDCA_BK_PARAM, u1bAIFS);
-#endif
-			}
-		}
-		break;
-	case HW_VAR_RESP_SIFS:
-		/* RESP_SIFS for CCK */
-		rtl_write_byte(rtlpriv, REG_R2T_SIFS, val[0]); /*  SIFS_T2T_CCK (0x08) */
-		rtl_write_byte(rtlpriv, REG_R2T_SIFS+1, val[1]); /* SIFS_R2T_CCK(0x08) */
-		/* RESP_SIFS for OFDM */
-		rtl_write_byte(rtlpriv, REG_T2T_SIFS, val[2]); /* SIFS_T2T_OFDM (0x0a) */
-		rtl_write_byte(rtlpriv, REG_T2T_SIFS+1, val[3]); /* SIFS_R2T_OFDM(0x0a) */
-		break;
-	case HW_VAR_ACK_PREAMBLE:
-		{
-			u8 regTmp;
-			u8 bShortPreamble = *((bool *)val);
-			/*  Joseph marked out for Netgear 3500 TKIP channel 7 issue.(Temporarily) */
-			regTmp = (haldata->nCur40MhzPrimeSC)<<5;
-			if (bShortPreamble)
-				regTmp |= 0x80;
-
-			rtl_write_byte(rtlpriv, REG_RRSR+2, regTmp);
-		}
-		break;
-	case HW_VAR_SEC_CFG:
-		rtl_write_byte(rtlpriv, REG_SECCFG, *((u8 *)val));
-		break;
-	case HW_VAR_DM_FLAG:
-		podmpriv->SupportAbility = *((u8 *)val);
-		break;
-	case HW_VAR_DM_FUNC_OP:
-		if (val[0])
-			podmpriv->BK_SupportAbility = podmpriv->SupportAbility;
-		else
-			podmpriv->SupportAbility = podmpriv->BK_SupportAbility;
-		break;
-	case HW_VAR_DM_FUNC_SET:
-		if (*((u32 *)val) == DYNAMIC_ALL_FUNC_ENABLE) {
-			pdmpriv->DMFlag = pdmpriv->InitDMFlag;
-			podmpriv->SupportAbility =	pdmpriv->InitODMFlag;
-		} else {
-			podmpriv->SupportAbility |= *((u32 *)val);
-		}
-		break;
-	case HW_VAR_DM_FUNC_CLR:
-		podmpriv->SupportAbility &= *((u32 *)val);
-		break;
-	case HW_VAR_CAM_EMPTY_ENTRY:
-		{
-			u8 ucIndex = *((u8 *)val);
-			u8 i;
-			u32 ulCommand = 0;
-			u32 ulContent = 0;
-			u32 ulEncAlgo = CAM_AES;
-
-			for (i = 0; i < CAM_CONTENT_COUNT; i++) {
-				/*  filled id in CAM config 2 byte */
-				if (i == 0)
-					ulContent |= (ucIndex & 0x03) | ((u16)(ulEncAlgo)<<2);
-				else
-					ulContent = 0;
-				/*  polling bit, and No Write enable, and address */
-				ulCommand = CAM_CONTENT_COUNT*ucIndex+i;
-				ulCommand = ulCommand | CAM_POLLINIG|CAM_WRITE;
-				/*  write content 0 is equall to mark invalid */
-				rtl_write_dword(rtlpriv, WCAMI, ulContent);  /* delay_ms(40); */
-				rtl_write_dword(rtlpriv, RWCAM, ulCommand);  /* delay_ms(40); */
-			}
-		}
-		break;
-	case HW_VAR_CAM_INVALID_ALL:
-		rtl_write_dword(rtlpriv, RWCAM, BIT(31)|BIT(30));
-		break;
-	case HW_VAR_CAM_WRITE:
-		{
-			u32 cmd;
-			u32 *cam_val = (u32 *)val;
-			rtl_write_dword(rtlpriv, WCAMI, cam_val[0]);
-
-			cmd = CAM_POLLINIG | CAM_WRITE | cam_val[1];
-			rtl_write_dword(rtlpriv, RWCAM, cmd);
-		}
-		break;
-	case HW_VAR_AC_PARAM_VO:
-		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, ((u32 *)(val))[0]);
-		break;
-	case HW_VAR_AC_PARAM_VI:
-		rtl_write_dword(rtlpriv, REG_EDCA_VI_PARAM, ((u32 *)(val))[0]);
-		break;
-	case HW_VAR_AC_PARAM_BE:
-		haldata->AcParam_BE = ((u32 *)(val))[0];
-		rtl_write_dword(rtlpriv, REG_EDCA_BE_PARAM, ((u32 *)(val))[0]);
-		break;
-	case HW_VAR_AC_PARAM_BK:
-		rtl_write_dword(rtlpriv, REG_EDCA_BK_PARAM, ((u32 *)(val))[0]);
-		break;
-	case HW_VAR_ACM_CTRL:
-		{
-			u8 acm_ctrl = *((u8 *)val);
-			u8 AcmCtrl = rtl_read_byte(rtlpriv, REG_ACMHWCTRL);
-
-			if (acm_ctrl > 1)
-				AcmCtrl = AcmCtrl | 0x1;
-
-			if (acm_ctrl & BIT(3))
-				AcmCtrl |= AcmHw_VoqEn;
-			else
-				AcmCtrl &= (~AcmHw_VoqEn);
-
-			if (acm_ctrl & BIT(2))
-				AcmCtrl |= AcmHw_ViqEn;
-			else
-				AcmCtrl &= (~AcmHw_ViqEn);
-
-			if (acm_ctrl & BIT(1))
-				AcmCtrl |= AcmHw_BeqEn;
-			else
-				AcmCtrl &= (~AcmHw_BeqEn);
-
-			//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"[HW_VAR_ACM_CTRL] Write 0x%X\n", AcmCtrl);
-			rtl_write_byte(rtlpriv, REG_ACMHWCTRL, AcmCtrl);
-		}
-		break;
-	case HW_VAR_AMPDU_MIN_SPACE:
-		{
-			u8 MinSpacingToSet;
-			u8 SecMinSpace;
-
-			MinSpacingToSet = *((u8 *)val);
-			if (MinSpacingToSet <= 7) {
-				switch (Adapter->securitypriv.dot11PrivacyAlgrthm) {
-				case _NO_PRIVACY_:
-				case _AES_:
-					SecMinSpace = 0;
-					break;
-				case _WEP40_:
-				case _WEP104_:
-				case _TKIP_:
-				case _TKIP_WTMIC_:
-					SecMinSpace = 6;
-					break;
-				default:
-					SecMinSpace = 7;
-					break;
-				}
-				if (MinSpacingToSet < SecMinSpace)
-					MinSpacingToSet = SecMinSpace;
-				rtl_write_byte(rtlpriv, REG_AMPDU_MIN_SPACE, (rtl_read_byte(rtlpriv, REG_AMPDU_MIN_SPACE) & 0xf8) | MinSpacingToSet);
-			}
-		}
-		break;
-	case HW_VAR_AMPDU_FACTOR:
-		{
-			u8 RegToSet_Normal[4] = {0x41, 0xa8, 0x72, 0xb9};
-			u8 FactorToSet;
-			u8 *pRegToSet;
-			u8 index = 0;
-
-			pRegToSet = RegToSet_Normal; /*  0xb972a841; */
-			FactorToSet = *((u8 *)val);
-			if (FactorToSet <= 3) {
-				FactorToSet = 1 << (FactorToSet + 2);
-				if (FactorToSet > 0xf)
-					FactorToSet = 0xf;
-
-				for (index = 0; index < 4; index++) {
-					if ((pRegToSet[index] & 0xf0) > (FactorToSet<<4))
-						pRegToSet[index] = (pRegToSet[index] & 0x0f) | (FactorToSet<<4);
-
-					if ((pRegToSet[index] & 0x0f) > FactorToSet)
-						pRegToSet[index] = (pRegToSet[index] & 0xf0) | (FactorToSet);
-
-					rtl_write_byte(rtlpriv, (REG_AGGLEN_LMT+index), pRegToSet[index]);
-				}
-			}
-		}
-		break;
-	case HW_VAR_RXDMA_AGG_PG_TH:
-		{
-			u8 threshold = *((u8 *)val);
-			if (threshold == 0)
-				threshold = haldata->UsbRxAggPageCount;
-			rtl_write_byte(rtlpriv, REG_RXDMA_AGG_PG_TH, threshold);
-		}
-		break;
-	case HW_VAR_SET_RPWM:
-		break;
-	case HW_VAR_H2C_FW_PWRMODE:
-		{
-			u8 psmode = (*(u8 *)val);
-
-			/*  Forece leave RF low power mode for 1T1R to prevent conficting setting in Fw power */
-			/*  saving sequence. 2010.06.07. Added by tynli. Suggested by SD3 yschang. */
-			if ((psmode != PS_MODE_ACTIVE) && (!IS_92C_SERIAL(haldata->VersionID)))
-				ODM_RF_Saving(podmpriv, true);
-			rtl8188e_set_FwPwrMode_cmd(hw, psmode);
-		}
-		break;
-	case HW_VAR_H2C_FW_JOINBSSRPT:
-		{
-			u8 mstatus = (*(u8 *)val);
-			rtl8188e_set_FwJoinBssReport_cmd(hw, mstatus);
-		}
-		break;
-	case HW_VAR_INITIAL_GAIN:
-		{
-			struct rtw_dig *pDigTable = &podmpriv->DM_DigTable;
-			u32 rx_gain = ((u32 *)(val))[0];
-
-			if (rx_gain == 0xff) {/* restore rx gain */
-				ODM_Write_DIG(podmpriv, pDigTable->BackupIGValue);
-			} else {
-				pDigTable->BackupIGValue = pDigTable->CurIGValue;
-				ODM_Write_DIG(podmpriv, rx_gain);
-			}
-		}
-		break;
-	case HW_VAR_TRIGGER_GPIO_0:
-		rtl8192cu_trigger_gpio_0(hw);
-		break;
-	case HW_VAR_RPT_TIMER_SETTING:
-		{
-			u16 min_rpt_time = (*(u16 *)val);
-			ODM_RA_Set_TxRPT_Time(podmpriv, min_rpt_time);
-		}
-		break;
-	case HW_VAR_ANTENNA_DIVERSITY_SELECT:
-		{
-			u8 Optimum_antenna = (*(u8 *)val);
-			u8 Ant;
-			/* switch antenna to Optimum_antenna */
-			if (haldata->CurAntenna !=  Optimum_antenna) {
-				Ant = (Optimum_antenna == 2) ? MAIN_ANT : AUX_ANT;
-				rtl88eu_dm_update_rx_idle_ant(&haldata->odmpriv, Ant);
-
-				haldata->CurAntenna = Optimum_antenna;
-			}
-		}
-		break;
-	case HW_VAR_EFUSE_BYTES: /*  To set EFUE total used bytes, added by Roger, 2008.12.22. */
-		haldata->EfuseUsedBytes = *((u16 *)val);
-		break;
-	case HW_VAR_FIFO_CLEARN_UP:
-		{
-			struct pwrctrl_priv *pwrpriv = &Adapter->pwrctrlpriv;
-			u8 trycnt = 100;
-
-			/* pause tx */
-			rtl_write_byte(rtlpriv, REG_TXPAUSE, 0xff);
-
-			/* keep sn */
-			Adapter->xmitpriv.nqos_ssn = rtl_read_word(rtlpriv, REG_NQOS_SEQ);
-
-			if (!pwrpriv->bkeepfwalive) {
-				/* RX DMA stop */
-				rtl_write_dword(rtlpriv, REG_RXPKT_NUM, (rtl_read_dword(rtlpriv, REG_RXPKT_NUM)|RW_RELEASE_EN));
-				do {
-					if (!(rtl_read_dword(rtlpriv, REG_RXPKT_NUM)&RXDMA_IDLE))
-						break;
-				} while (trycnt--);
-				if (trycnt == 0)
-					//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"Stop RX DMA failed......\n");
-
-				/* RQPN Load 0 */
-				rtl_write_word(rtlpriv, REG_RQPN_NPQ, 0x0);
-				rtl_write_dword(rtlpriv, REG_RQPN, 0x80000000);
-				mdelay(10);
-			}
-		}
-		break;
-	case HW_VAR_CHECK_TXBUF:
-		break;
-	case HW_VAR_APFM_ON_MAC:
-		haldata->bMacPwrCtrlOn = *val;
-		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"%s: bMacPwrCtrlOn=%d\n", __func__, haldata->bMacPwrCtrlOn);
-		break;
-	case HW_VAR_TX_RPT_MAX_MACID:
-		{
-			u8 maxMacid = *val;
-			//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"### MacID(%d),Set Max Tx RPT MID(%d)\n", maxMacid, maxMacid+1);
-			rtl_write_byte(rtlpriv, REG_TX_RPT_CTRL+1, maxMacid+1);
-		}
-		break;
-	case HW_VAR_H2C_MEDIA_STATUS_RPT:
-		rtl8188e_set_FwMediaStatus_cmd(hw, (*(__le16 *)val));
-		break;
-	case HW_VAR_BCN_VALID:
-		/* BCN_VALID, BIT(16) of REG_TDECTRL = BIT(0) of REG_TDECTRL+2, write 1 to clear, Clear by sw */
-		rtl_write_byte(rtlpriv, REG_TDECTRL+2, rtl_read_byte(rtlpriv, REG_TDECTRL+2) | BIT(0));
-		break;
-	default:
-		break;
-	}
-}
-
-static void GetHwReg8188EU(struct ieee80211_hw *hw, u8 variable, u8 *val)
-{
-
-	switch (variable) {
-	case HW_VAR_BASIC_RATE:
-		*((u16 *)(val)) = haldata->BasicRateSet;
-	case HW_VAR_TXPAUSE:
-		val[0] = rtl_read_byte(rtlpriv, REG_TXPAUSE);
-		break;
-	case HW_VAR_BCN_VALID:
-		/* BCN_VALID, BIT(16) of REG_TDECTRL = BIT(0) of REG_TDECTRL+2 */
-		val[0] = (BIT(0) & rtl_read_byte(rtlpriv, REG_TDECTRL+2)) ? true : false;
-		break;
-	case HW_VAR_DM_FLAG:
-		val[0] = podmpriv->SupportAbility;
-		break;
-	case HW_VAR_RF_TYPE:
-		val[0] = rtlphy->rf_type;
-		break;
-	case HW_VAR_FWLPS_RF_ON:
-		{
-			/* When we halt NIC, we should check if FW LPS is leave. */
-			if (ppsc->rfpwr_state == ERFOFF) {
-				/*  If it is in HW/SW Radio OFF or IPS state, we do not check Fw LPS Leave, */
-				/*  because Fw is unload. */
-				val[0] = true;
-			} else {
-				u32 valRCR;
-				valRCR = rtl_read_dword(rtlpriv, REG_RCR);
-				valRCR &= 0x00070000;
-				if (valRCR)
-					val[0] = false;
-				else
-					val[0] = true;
-			}
-		}
-		break;
-	case HW_VAR_CURRENT_ANTENNA:
-		val[0] = haldata->CurAntenna;
-		break;
-	case HW_VAR_EFUSE_BYTES: /*  To get EFUE total used bytes, added by Roger, 2008.12.22. */
-		*((u16 *)(val)) = haldata->EfuseUsedBytes;
-		break;
-	case HW_VAR_APFM_ON_MAC:
-		*val = haldata->bMacPwrCtrlOn;
-		break;
-	case HW_VAR_CHK_HI_QUEUE_EMPTY:
-		*val = ((rtl_read_dword(rtlpriv, REG_HGQ_INFORMATION)&0x0000ff00) == 0) ? true : false;
-		break;
-	default:
-		break;
-	}
-
-}
-#else
 void rtl88eu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -2853,21 +2174,8 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 	case HW_VAR_IO_CMD:
 		rtl88e_phy_set_io_cmd(hw, (*(enum io_type *)val));
 		break;
-		/* TODO */
-#if 0
-	case HW_VAR_SET_RPWM:{
-		u8 rpwm_val;
-
-		rpwm_val = rtl_read_byte(rtlpriv, REG_PCIE_HRPWM);
-		udelay(1);
-
-		if (rpwm_val & BIT(7)) {
-			rtl_write_byte(rtlpriv, REG_PCIE_HRPWM, *val);
-		} else {
-			rtl_write_byte(rtlpriv, REG_PCIE_HRPWM, *val | BIT(7));
-		}
-		break; }
-#endif
+	case HW_VAR_SET_RPWM:
+		break;
 	case HW_VAR_H2C_FW_PWRMODE:
 		rtl88e_set_fw_pwrmode_cmd(hw, *val);
 		break;
@@ -2982,257 +2290,6 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 		break;
 	}
 }
-#endif
-
-/*  */
-/*	Description: */
-/*		Query setting of specified variable. */
-/*  */
-/* TODO */
-#if 0
-static u8
-GetHalDefVar8188EUsb(
-		struct ieee80211_hw *hw,
-		enum hal_def_variable eVariable,
-		void *pValue
-	)
-{
-	u8 bResult = true;
-
-	switch (eVariable) {
-	case HAL_DEF_UNDERCORATEDSMOOTHEDPWDB:
-		{
-			struct mlme_priv *pmlmepriv = &Adapter->mlmepriv;
-			struct sta_priv *pstapriv = &Adapter->stapriv;
-			struct sta_info *psta;
-			psta = rtw_get_stainfo(pstapriv, pmlmepriv->cur_network.network.MacAddress);
-			if (psta)
-				*((int *)pValue) = psta->rssi_stat.UndecoratedSmoothedPWDB;
-		}
-		break;
-	case HAL_DEF_IS_SUPPORT_ANT_DIV:
-		*((u8 *)pValue) = (rtlefuse->antenna_div_cfg == 0) ? false : true;
-		break;
-	case HAL_DEF_CURRENT_ANTENNA:
-		*((u8 *)pValue) = haldata->CurAntenna;
-		break;
-	case HAL_DEF_DRVINFO_SZ:
-		*((u32 *)pValue) = DRVINFO_SZ;
-		break;
-	case HAL_DEF_MAX_RECVBUF_SZ:
-		*((u32 *)pValue) = MAX_RECVBUF_SZ;
-		break;
-	case HAL_DEF_RX_PACKET_OFFSET:
-		*((u32 *)pValue) = RXDESC_SIZE + DRVINFO_SZ;
-		break;
-	case HAL_DEF_DBG_DM_FUNC:
-		*((u32 *)pValue) = haldata->odmpriv.SupportAbility;
-		break;
-	case HAL_DEF_RA_DECISION_RATE:
-		{
-			u8 MacID = *((u8 *)pValue);
-			*((u8 *)pValue) = ODM_RA_GetDecisionRate_8188E(&(haldata->odmpriv), MacID);
-		}
-		break;
-	case HAL_DEF_RA_SGI:
-		{
-			u8 MacID = *((u8 *)pValue);
-			*((u8 *)pValue) = ODM_RA_GetShortGI_8188E(&(haldata->odmpriv), MacID);
-		}
-		break;
-	case HAL_DEF_PT_PWR_STATUS:
-		{
-			u8 MacID = *((u8 *)pValue);
-			*((u8 *)pValue) = ODM_RA_GetHwPwrStatus_8188E(&(haldata->odmpriv), MacID);
-		}
-		break;
-	case HW_VAR_MAX_RX_AMPDU_FACTOR:
-		*((u32 *)pValue) = MAX_AMPDU_FACTOR_64K;
-		break;
-	case HW_DEF_RA_INFO_DUMP:
-		{
-			u8 entry_id = *((u8 *)pValue);
-			if (check_fwstate(&Adapter->mlmepriv, _FW_LINKED)) {
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"============ RA status check ===================\n");
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"Mac_id:%d , RateID = %d, RAUseRate = 0x%08x, RateSGI = %d, DecisionRate = 0x%02x ,PTStage = %d\n",
-					entry_id,
-					haldata->odmpriv.RAInfo[entry_id].RateID,
-					haldata->odmpriv.RAInfo[entry_id].RAUseRate,
-					haldata->odmpriv.RAInfo[entry_id].RateSGI,
-					haldata->odmpriv.RAInfo[entry_id].DecisionRate,
-					haldata->odmpriv.RAInfo[entry_id].PTStage);
-			}
-		}
-		break;
-	case HW_DEF_ODM_DBG_FLAG:
-		{
-			struct odm_dm_struct *dm_ocm = &(haldata->odmpriv);
-			pr_info("dm_ocm->DebugComponents = 0x%llx\n", dm_ocm->DebugComponents);
-		}
-		break;
-	case HAL_DEF_DBG_DUMP_RXPKT:
-		*((u8 *)pValue) = haldata->bDumpRxPkt;
-		break;
-	case HAL_DEF_DBG_DUMP_TXPKT:
-		*((u8 *)pValue) = haldata->bDumpTxPkt;
-		break;
-	default:
-		bResult = false;
-		break;
-	}
-
-	return bResult;
-}
-#endif
-
-/*  */
-/*	Description: */
-/*		Change default setting of specified variable. */
-/*  */
-/* TODO */
-#if 0
-static u8 SetHalDefVar8188EUsb(struct ieee80211_hw *hw, enum hal_def_variable eVariable, void *pValue)
-{
-	struct hal_data_8188e	*haldata = GET_HAL_DATA(Adapter);
-	u8 bResult = true;
-
-	switch (eVariable) {
-	case HAL_DEF_DBG_DM_FUNC:
-		{
-			u8 dm_func = *((u8 *)pValue);
-			struct odm_dm_struct *podmpriv = &haldata->odmpriv;
-
-			if (dm_func == 0) { /* disable all dynamic func */
-				podmpriv->SupportAbility = DYNAMIC_FUNC_DISABLE;
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==> Disable all dynamic function...\n");
-			} else if (dm_func == 1) {/* disable DIG */
-				podmpriv->SupportAbility  &= (~DYNAMIC_BB_DIG);
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==> Disable DIG...\n");
-			} else if (dm_func == 2) {/* disable High power */
-				podmpriv->SupportAbility  &= (~DYNAMIC_BB_DYNAMIC_TXPWR);
-			} else if (dm_func == 3) {/* disable tx power tracking */
-				podmpriv->SupportAbility  &= (~DYNAMIC_RF_CALIBRATION);
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==> Disable tx power tracking...\n");
-			} else if (dm_func == 5) {/* disable antenna diversity */
-				podmpriv->SupportAbility  &= (~DYNAMIC_BB_ANT_DIV);
-			} else if (dm_func == 6) {/* turn on all dynamic func */
-				if (!(podmpriv->SupportAbility  & DYNAMIC_BB_DIG)) {
-					struct rtw_dig *pDigTable = &podmpriv->DM_DigTable;
-					pDigTable->CurIGValue = rtl_read_byte(rtlpriv, 0xc50);
-				}
-				podmpriv->SupportAbility = DYNAMIC_ALL_FUNC_ENABLE;
-				//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==> Turn on all dynamic function...\n");
-			}
-		}
-		break;
-	case HAL_DEF_DBG_DUMP_RXPKT:
-		haldata->bDumpRxPkt = *((u8 *)pValue);
-		break;
-	case HAL_DEF_DBG_DUMP_TXPKT:
-		haldata->bDumpTxPkt = *((u8 *)pValue);
-		break;
-	case HW_DEF_FA_CNT_DUMP:
-		{
-			u8 bRSSIDump = *((u8 *)pValue);
-			struct odm_dm_struct *dm_ocm = &(haldata->odmpriv);
-			if (bRSSIDump)
-				dm_ocm->DebugComponents	=	ODM_COMP_DIG|ODM_COMP_FA_CNT;
-			else
-				dm_ocm->DebugComponents	= 0;
-		}
-		break;
-	case HW_DEF_ODM_DBG_FLAG:
-		{
-			u64	DebugComponents = *((u64 *)pValue);
-			struct odm_dm_struct *dm_ocm = &(haldata->odmpriv);
-			dm_ocm->DebugComponents = DebugComponents;
-		}
-		break;
-	default:
-		bResult = false;
-		break;
-	}
-
-	return bResult;
-}
-
-static void UpdateHalRAMask8188EUsb(struct ieee80211_hw *hw, u32 mac_id, u8 rssi_level)
-{
-	u8 init_rate = 0;
-	u8 networkType, raid;
-	u32 mask, rate_bitmap;
-	u8 shortGIrate = false;
-	int	supportRateNum = 0;
-
-	if (mac_id >= NUM_STA) /* CAM_SIZE */
-		return;
-	psta = pmlmeinfo->FW_sta_info[mac_id].psta;
-	if (psta == NULL)
-		return;
-	switch (mac_id) {
-	case 0:/*  for infra mode */
-		supportRateNum = rtw_get_rateset_len(cur_network->SupportedRates);
-		networkType = judge_network_type(adapt, cur_network->SupportedRates, supportRateNum) & 0xf;
-		raid = networktype_to_raid(networkType);
-		mask = update_supported_rate(cur_network->SupportedRates, supportRateNum);
-		mask |= (pmlmeinfo->HT_enable) ? update_MSC_rate(&(pmlmeinfo->HT_caps)) : 0;
-		if (support_short_GI(adapt, &(pmlmeinfo->HT_caps)))
-			shortGIrate = true;
-		break;
-	case 1:/* for broadcast/multicast */
-		supportRateNum = rtw_get_rateset_len(pmlmeinfo->FW_sta_info[mac_id].SupportedRates);
-		if (pmlmeext->cur_wireless_mode & WIRELESS_11B)
-			networkType = WIRELESS_11B;
-		else
-			networkType = WIRELESS_11G;
-		raid = networktype_to_raid(networkType);
-		mask = update_basic_rate(cur_network->SupportedRates, supportRateNum);
-		break;
-	default: /* for each sta in IBSS */
-		supportRateNum = rtw_get_rateset_len(pmlmeinfo->FW_sta_info[mac_id].SupportedRates);
-		networkType = judge_network_type(adapt, pmlmeinfo->FW_sta_info[mac_id].SupportedRates, supportRateNum) & 0xf;
-		raid = networktype_to_raid(networkType);
-		mask = update_supported_rate(cur_network->SupportedRates, supportRateNum);
-
-		/* todo: support HT in IBSS */
-		break;
-	}
-
-	rate_bitmap = 0x0fffffff;
-	rate_bitmap = ODM_Get_Rate_Bitmap(&haldata->odmpriv, mac_id, mask, rssi_level);
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"%s => mac_id:%d, networkType:0x%02x, mask:0x%08x\n\t ==> rssi_level:%d, rate_bitmap:0x%08x\n", __func__, mac_id, networkType, mask, rssi_level, rate_bitmap);
-
-	mask &= rate_bitmap;
-
-	init_rate = get_highest_rate_idx(mask)&0x3f;
-
-	if (haldata->fw_ractrl) {
-		u8 arg;
-
-		arg = mac_id & 0x1f;/* MACID */
-		arg |= BIT(7);
-		if (shortGIrate)
-			arg |= BIT(5);
-		mask |= ((raid << 28) & 0xf0000000);
-		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"update raid entry, mask=0x%x, arg=0x%x\n", mask, arg);
-		psta->ra_mask = mask;
-		mask |= ((raid << 28) & 0xf0000000);
-
-		/* to do ,for 8188E-SMIC */
-		rtl8188e_set_raid_cmd(adapt, mask);
-	} else {
-		ODM_RA_UpdateRateInfo_8188E(&(haldata->odmpriv),
-				mac_id,
-				raid,
-				mask,
-				shortGIrate
-				);
-	}
-	/* set ra_id */
-	psta->raid = raid;
-	psta->init_rate = init_rate;
-}
-#endif
 
 void rtl88eu_update_interrupt_mask(struct ieee80211_hw *hw,
 				   u32 add_msr, u32 rm_msr)
