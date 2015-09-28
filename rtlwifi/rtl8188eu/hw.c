@@ -1851,6 +1851,9 @@ void rtl88eu_card_disable(struct ieee80211_hw *hw)
 
 	_rtl88eu_set_media_status(hw, opmode);
 
+	rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
+	RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+
 	rtl_write_dword(rtlpriv, REG_HIMR_88E, IMR_DISABLED_88E);
 	rtl_write_dword(rtlpriv, REG_HIMRE_88E, IMR_DISABLED_88E);
 
