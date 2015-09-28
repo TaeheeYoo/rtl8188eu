@@ -1,6 +1,5 @@
 TODO
 - support ht mode
-- correct led code
 - adjust log message
 - fix powerdown issue
 - fix rx signal
