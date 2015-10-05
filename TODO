@@ -4,5 +4,6 @@ TODO
 - fix powerdown issue
 - fix rx signal
 - validae locks
-- support AP/mesh mode
-
+- support mesh mode
+- fix kernel panic
+- fix usb3.0 performance issue
