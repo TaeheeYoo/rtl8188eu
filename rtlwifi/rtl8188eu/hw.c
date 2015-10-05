@@ -19,8 +19,6 @@
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  ******************************************************************************/
-#define _HCI_HAL_INIT_C_
-
 #include "../wifi.h"
 #include "../efuse.h"
 #include "../base.h"
@@ -212,7 +210,8 @@ s32 InitLLTTable(struct ieee80211_hw *hw, u8 boundary)
 {
 	s32 status = false;
 	u32 i;
-	u32 Last_Entry_Of_TxPktBuf = LAST_ENTRY_OF_TX_PKT_BUFFER;/*  176, 22k */
+	/*  176, 22k */
+	u32 Last_Entry_Of_TxPktBuf = LAST_ENTRY_OF_TX_PKT_BUFFER;
 
 	if (rtl_IOL_applied(hw)) {
 		status = iol_InitLLTTable(hw, boundary);
@@ -223,21 +222,22 @@ s32 InitLLTTable(struct ieee80211_hw *hw, u8 boundary)
 				return status;
 		}
 
-		/*  end of list */
+		/* end of list */
 		status = _LLTWrite(hw, (boundary - 1), 0xFF);
 		if (true != status)
 			return status;
 
-		/*  Make the other pages as ring buffer */
-		/*  This ring buffer is used as beacon buffer if we config this MAC as two MAC transfer. */
-		/*  Otherwise used as local loopback buffer. */
+		/*  Make the other pages as ring buffer
+		 *  This ring buffer is used as beacon buffer
+		 *  if we config this MAC as two MAC transfer.
+		 *  Otherwise used as local loopback buffer. */
 		for (i = boundary; i < Last_Entry_Of_TxPktBuf; i++) {
 			status = _LLTWrite(hw, i, (i + 1));
 			if (true != status)
 				return status;
 		}
 
-		/*  Let last entry point to the start entry of ring buffer */
+		/* Let last entry point to the start entry of ring buffer */
 		status = _LLTWrite(hw, Last_Entry_Of_TxPktBuf, boundary);
 		if (true != status) {
 			return status;
@@ -314,7 +314,7 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 	} else {
 		rtlefuse->eeprom_version = 1;
 	}
-	//rtlefuse->txpwr_fromeprom = true; /* TODO */
+	rtlefuse->txpwr_fromeprom = true; /* TODO */
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
 		 "eeprom_version = %d\n", rtlefuse->eeprom_version);
 
@@ -601,7 +601,7 @@ void Hal_ReadTxPowerInfo88E(struct ieee80211_hw *hw, u8 *PROMContent)
 
 
 #endif
-	/*  2010/10/19 MH Add Regulator recognize for CU. */
+	/* 2010/10/19 MH Add Regulator recognize for CU. */
 	if (!rtlefuse->autoload_failflag) {
 		rtlefuse->eeprom_regulatory = (PROMContent[EEPROM_RF_BOARD_OPTION_88E]&0x7);	/* bit0~2 */
 		if (PROMContent[EEPROM_RF_BOARD_OPTION_88E] == 0xFF)
@@ -747,7 +747,8 @@ int rtl8188eu_endpoint_mapping(struct ieee80211_hw *hw)
 			return result;
 	}
 
-	/*  All config other than above support one Bulk IN and one Interrupt IN. */
+	/*  All config other than above support one Bulk IN and one
+	 *  Interrupt IN. */
 
 	result = _out_ep_mapping(hw);
 
@@ -773,14 +774,17 @@ static u32 rtl8188eu_InitPowerOn(struct ieee80211_hw *hw)
 	}
 
 	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
-	/*  Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
-	rtl_write_word(rtlpriv, REG_CR, 0x00);  /* suggseted by zhouzhou, by page, 20111230 */
+	/*  Set CR bit10 to enable 32k calibration.
+	 *  Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
+	rtl_write_word(rtlpriv, REG_CR, 0x00);
+	/* suggseted by zhouzhou, by page, 20111230 */
 
-		/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
+	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
 	value16 = rtl_read_word(rtlpriv, REG_CR);
 	value16 |= (HCI_TXDMA_EN | HCI_RXDMA_EN | TXDMA_EN | RXDMA_EN
 				| PROTOCOL_EN | SCHEDULE_EN | ENSEC | CALTMR_EN);
-	/*  for SDIO - Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
+	/*  for SDIO - Set CR bit10 to enable 32k calibration.
+	 *  Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
 
 	rtl_write_word(rtlpriv, REG_CR, value16);
 	/* TODO */
@@ -847,7 +851,7 @@ static void _InitInterrupt(struct ieee80211_hw *hw)
 	/*  1; Use bulk endpoint to upload interrupt pkt, */
 	usb_opt = rtl_read_byte(rtlpriv, REG_USB_SPECIAL_OPTION);
 
-	/* TODO!!!!!!!!!!!!!!!!!!!!*/
+	/* TODO */
 #if 0
 	if (!IS_HIGH_SPEED_USB(rtlusb->udev))
 		usb_opt = usb_opt & (~INT_BULK_SEL);
@@ -869,9 +873,9 @@ static void _InitQueueReservedPage(struct ieee80211_hw *hw)
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
 
-	u32 numHQ	= 0;
-	u32 numLQ	= 0;
-	u32 numNQ	= 0;
+	u32 numHQ = 0;
+	u32 numLQ = 0;
+	u32 numNQ = 0;
 	u32 numPubQ;
 	u32 value32;
 	u8 value8;
@@ -884,7 +888,7 @@ static void _InitQueueReservedPage(struct ieee80211_hw *hw)
 		if (rtlusb->out_queue_sel & TX_SELE_LQ)
 			numLQ = 0x1C;
 
-		/*  NOTE: This step shall be proceed before writting REG_RQPN. */
+		/* NOTE: This step shall be proceed before writting REG_RQPN. */
 		if (rtlusb->out_queue_sel & TX_SELE_NQ)
 			numNQ = 0x1C;
 		value8 = (u8)_NPQ(numNQ);
@@ -896,9 +900,11 @@ static void _InitQueueReservedPage(struct ieee80211_hw *hw)
 		value32 = _HPQ(numHQ) | _LPQ(numLQ) | _PUBQ(numPubQ) | LD_RQPN;
 		rtl_write_dword(rtlpriv, REG_RQPN, value32);
 	} else {
-		rtl_write_word(rtlpriv, REG_RQPN_NPQ, 0x0000);/* Just follow MP Team,??? Georgia 03/28 */
+		rtl_write_word(rtlpriv, REG_RQPN_NPQ, 0x0000);
+		/* Just follow MP Team,??? Georgia 03/28 */
 		rtl_write_word(rtlpriv, REG_RQPN_NPQ, 0x0d);
-		rtl_write_dword(rtlpriv, REG_RQPN, 0x808E000d);/* reserve 7 page for LPS */
+		rtl_write_dword(rtlpriv, REG_RQPN, 0x808E000d);
+		/* reserve 7 page for LPS */
 	}
 }
 
@@ -915,8 +921,6 @@ static void _InitTxBufferBoundary(struct ieee80211_hw *hw, u8 boundary)
 static void _InitPageBoundary(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	/*  RX Page Boundary */
-	/*  */
 	u16 rxff_bndy = 0x2400-1;
 
 	rtl_write_word(rtlpriv, (REG_TRXFF_BNDY + 2), rxff_bndy);
@@ -927,7 +931,7 @@ static void _InitNormalChipRegPriority(struct ieee80211_hw *hw, u16 beQ,
 				       u16 hiQ)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u16 value16	= (rtl_read_word(rtlpriv, REG_TRXDMA_CTRL) & 0x7);
+	u16 value16 = (rtl_read_word(rtlpriv, REG_TRXDMA_CTRL) & 0x7);
 
 	value16 |= _TXDMA_BEQ_MAP(beQ)	| _TXDMA_BKQ_MAP(bkQ) |
 		   _TXDMA_VIQ_MAP(viQ)	| _TXDMA_VOQ_MAP(voQ) |
@@ -1010,14 +1014,14 @@ static void _InitNormalChipThreeOutEpPriority(struct ieee80211_hw *hw)
 
 	u16 beQ, bkQ, viQ, voQ, mgtQ, hiQ;
 
-	if (!rtlusb->wmm_enable) {/*  typical setting */
+	if (!rtlusb->wmm_enable) {/* typical setting */
 		beQ	= QUEUE_LOW;
 		bkQ	= QUEUE_LOW;
 		viQ	= QUEUE_NORMAL;
 		voQ	= QUEUE_HIGH;
 		mgtQ	= QUEUE_HIGH;
 		hiQ	= QUEUE_HIGH;
-	} else {/*  for WMM */
+	} else {/* for WMM */
 		beQ	= QUEUE_LOW;
 		bkQ	= QUEUE_NORMAL;
 		viQ	= QUEUE_NORMAL;
@@ -1062,9 +1066,6 @@ static void _rtl88eu_resume_tx_beacon(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 
-	/*  2010.03.01. Marked by tynli. No need to call workitem beacause we record the value */
-	/*  which should be read from register to a global variable. */
-
 	u8 tmp1byte;
 	tmp1byte = rtl_read_byte(rtlpriv, REG_FWHW_TXQ_CTRL + 2);
 	rtl_write_byte(rtlpriv, REG_FWHW_TXQ_CTRL+2, tmp1byte | BIT(6));
@@ -1077,9 +1078,6 @@ static void _rtl88eu_resume_tx_beacon(struct ieee80211_hw *hw)
 static void _rtl88eu_stop_tx_beacon(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	/*  2010.03.01. Marked by tynli. No need to call workitem beacause we record the value */
-	/*  which should be read from register to a global variable. */
-
 	u8 tmp1byte;
 	tmp1byte = rtl_read_byte(rtlpriv, REG_FWHW_TXQ_CTRL + 2);
 	rtl_write_byte(rtlpriv, REG_FWHW_TXQ_CTRL+2, tmp1byte & (~BIT(6)));
@@ -1087,11 +1085,7 @@ static void _rtl88eu_stop_tx_beacon(struct ieee80211_hw *hw)
 	tmp1byte = rtl_read_byte(rtlpriv, REG_TBTT_PROHIBIT + 2);
 	tmp1byte &= ~(BIT(0));
 	rtl_write_byte(rtlpriv, REG_TBTT_PROHIBIT+2, tmp1byte);
-
-	 /* todo: CheckFwRsvdPageContent(Adapter);  2010.06.23. Added by tynli. */
 }
-
-
 
 static int _rtl88eu_set_media_status(struct ieee80211_hw *hw,
 				     enum nl80211_iftype type)
@@ -1234,7 +1228,6 @@ static void _InitNetworkType(struct ieee80211_hw *hw)
 static void _InitTransferPageSize(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	/*  Tx page size is always 128. */
 
 	u8 value8;
 	value8 = _PSRX(PBP_128) | _PSTX(PBP_128);
@@ -1257,7 +1250,6 @@ static void _InitWMACSetting(struct ieee80211_hw *hw)
 				  RCR_APP_ICV | RCR_AMF | RCR_HTC_LOC_CTRL |
 				  RCR_APP_MIC | RCR_APP_PHYSTS;
 
-	/*  some REG_RCR will be modified later by phy_ConfigMACWithHeaderFile() */
 	rtl_write_dword(rtlpriv, REG_RCR, mac->rx_conf);
 
 	/*  Accept all multicast address */
@@ -1331,21 +1323,6 @@ static void _InitRetryFunction(struct ieee80211_hw *hw)
 	rtl_write_byte(rtlpriv, REG_ACKTO, 0x40);
 }
 
-/*-----------------------------------------------------------------------------
- * Function:	usb_AggSettingTxUpdate()
- *
- * Overview:	Separate TX/RX parameters update independent for TP detection and
- *			dynamic TX/RX aggreagtion parameters update.
- *
- * Input:			struct ieee80211_hw *
- *
- * Output/Return:	NONE
- *
- * Revised History:
- *	When		Who		Remark
- *	12/10/2010	MHC		Separate to smaller function.
- *
- *---------------------------------------------------------------------------*/
 static void usb_AggSettingTxUpdate(struct ieee80211_hw *hw)
 {
 	/* TODO */
@@ -1369,26 +1346,10 @@ static void usb_AggSettingTxUpdate(struct ieee80211_hw *hw)
 		rtl_write_dword(rtlpriv, REG_TDECTRL, value32);
 	}
 #endif
-}	/*  usb_AggSettingTxUpdate */
+}
 
-/*-----------------------------------------------------------------------------
- * Function:	usb_AggSettingRxUpdate()
- *
- * Overview:	Separate TX/RX parameters update independent for TP detection and
- *			dynamic TX/RX aggreagtion parameters update.
- *
- * Input:			struct ieee80211_hw *
- *
- * Output/Return:	NONE
- *
- * Revised History:
- *	When		Who		Remark
- *	12/10/2010	MHC		Separate to smaller function.
- *
- *---------------------------------------------------------------------------*/
 static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)
 {
-	/* TODO */
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
@@ -1399,7 +1360,7 @@ static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)
 	valueDMA = rtl_read_byte(rtlpriv, REG_TRXDMA_CTRL);
 	valueUSB = rtl_read_byte(rtlpriv, REG_USB_SPECIAL_OPTION);
 
-	/* TODO!!!!!!!!!!!!!1*/
+	/* TODO */
 	rtlusb->usb_rx_agg_mode = USB_RX_AGG_DMA;
 	switch (rtlusb->usb_rx_agg_mode) {
 	case USB_RX_AGG_DMA:
@@ -1452,7 +1413,7 @@ static void InitUsbAggregationSetting(struct ieee80211_hw *hw)
 #if 1
 	usb_AggSettingTxUpdate(hw);
 	usb_AggSettingRxUpdate(hw);
-	//haldata->UsbRxHighSpeedMode = false;
+	/* haldata->UsbRxHighSpeedMode = false; */
 #endif
 }
 
@@ -1625,13 +1586,10 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl88e_phy_bb_config(hw);
 	rtlphy->rf_mode = RF_OP_BY_SW_3WIRE;
 	rtl88e_phy_rf_config(hw);
-	/* TODO */
-#if 1
 	rtlphy->rfreg_chnlval[0] = rtl_get_rfreg(hw, (enum radio_path)0,
 						 RF_CHNLBW, bRFRegOffsetMask);
 	rtlphy->rfreg_chnlval[1] = rtl_get_rfreg(hw, (enum radio_path)1,
 						 RF_CHNLBW, bRFRegOffsetMask);
-#endif
 	status = rtl8188e_iol_efuse_patch(hw);
 	if (status == false) {
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
@@ -1697,6 +1655,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl_write_dword(rtlpriv, REG_FWHW_TXQ_CTRL,
 			rtl_read_dword(rtlpriv, REG_FWHW_TXQ_CTRL)|BIT(12));
 	rtl88e_dm_init(hw);
+	/* TODO */
 #if 0
 	rtl88eu_hal_notch_filter(hw, 0);
 #endif
@@ -1729,20 +1688,19 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 				 PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK,
 				 RTL8188EE_NIC_LPS_ENTER_FLOW);
 
-	/*  2. 0x1F[7:0] = 0		turn off RF */
+	/*  2. 0x1F[7:0] = 0 turn off RF */
 
 	val8 = rtl_read_byte(rtlpriv, REG_MCUFWDL);
 	if ((val8 & RAM_DL_SEL) && rtlhal->fw_ready) { /* 8051 RAM code */
-		/*  Reset MCU 0x2[10]=0. */
+		/* Reset MCU 0x2[10]=0. */
 		val8 = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN+1);
 		val8 &= ~BIT(2);	/*  0x2[10], FEN_CPUEN */
 		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN+1, val8);
 	}
 
-	/*  reset MCU ready status */
+	/* reset MCU ready status */
 	rtl_write_byte(rtlpriv, REG_MCUFWDL, 0);
 
-	/* YJ,add,111212 */
 	/* Disable 32k */
 	val8 = rtl_read_byte(rtlpriv, REG_32K_CTRL);
 	rtl_write_byte(rtlpriv, REG_32K_CTRL, val8&(~BIT(0)));
@@ -1766,8 +1724,10 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 	val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL, (val8<<4));
 	val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL+1);
-	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL+1, val8|0x0F);/* Reg0x43 */
-	rtl_write_dword(rtlpriv, REG_BB_PAD_CTRL, 0x00080808);/* set LNA ,TRSW,EX_PA Pin to output mode */
+	/* Reg0x43 */
+	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL+1, val8|0x0F);
+	/* set LNA ,TRSW,EX_PA Pin to output mode */
+	rtl_write_dword(rtlpriv, REG_BB_PAD_CTRL, 0x00080808);
 	/* TODO */
 #if 0
 	haldata->bMacPwrCtrlOn = false;
@@ -2294,7 +2254,7 @@ void rtl88eu_set_beacon_related_registers(struct ieee80211_hw *hw)
 	value32 |= TSFRST;
 	rtl_write_dword(rtlpriv, REG_TCR, value32);
 
-	/*  NOTE: Fix test chip's bug (about contention windows's randomness) */
+	/* NOTE: Fix test chip's bug (about contention windows's randomness) */
 	rtl_write_byte(rtlpriv,  REG_RXTSF_OFFSET_CCK, 0x50);
 	rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_OFDM, 0x50);
 
@@ -2399,7 +2359,6 @@ static void rtl88eu_update_hal_rate_mask(struct ieee80211_hw *hw,
 					ratr_bitmap &= 0x0f8ff005;
 			}
 		}
-		/*}*/
 
 		if ((curtxbw_40mhz && curshortgi_40mhz) ||
 		    (!curtxbw_40mhz && curshortgi_20mhz)) {
