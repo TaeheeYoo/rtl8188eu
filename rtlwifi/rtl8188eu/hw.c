@@ -197,7 +197,8 @@ static s32 _LLTWrite(struct ieee80211_hw *hw, u32 address, u32 data)
 			break;
 
 		if (count > POLLING_LLT_THRESHOLD) {
-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to polling write LLT done at address %d!\n", address);
+			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+				 "Failed to polling write LLT done at address %d!\n", address);
 			status = false;
 			break;
 		}
@@ -274,7 +275,7 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 	eeprom_id = le16_to_cpu(*((__le16 *)hwinfo));
 	if (eeprom_id != RTL_EEPROM_ID) {
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-		"EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
 		rtlefuse->autoload_failflag = true;
 	} else {
 		rtlefuse->autoload_failflag = false;
@@ -293,8 +294,10 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 		rtlefuse->eeprom_oemid		= EEPROM_Default_CustomerID;
 	}
 
-	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"EEPROM ID = 0x%04x\n", eeprom_id);
-	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"VID = 0x%04X, PID = 0x%04X\n",
+	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+		 "EEPROM ID = 0x%04x\n", eeprom_id);
+	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+		 "VID = 0x%04X, PID = 0x%04X\n",
 		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did);
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
 		 "Customer ID: 0x%02X", rtlefuse->eeprom_oemid);
@@ -769,7 +772,8 @@ static u32 rtl8188eu_InitPowerOn(struct ieee80211_hw *hw)
 	if (!rtl_hal_pwrseqcmdparsing(rtlpriv, PWR_CUT_ALL_MSK,
 				      PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK,
 				      RTL8188EE_NIC_PWR_ON_FLOW)) {
-		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,KERN_ERR "%s: run power on flow fail\n", __func__);
+		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+			 "run power on flow fail\n");
 		return false;
 	}
 
@@ -1453,7 +1457,6 @@ static void _InitAntenna_Selection(struct ieee80211_hw *hw)
 
 	if (rtlefuse->antenna_div_cfg == 0)
 		return;
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"==>  %s ....\n", __func__);
 
 	rtl_write_dword(rtlpriv, REG_LEDCFG0,
 			rtl_read_dword(rtlpriv, REG_LEDCFG0)|BIT(23));
@@ -1469,12 +1472,13 @@ enum rf_pwrstate RfOnOffDetect(struct ieee80211_hw *hw)
 
 	if (ppsc->pwrdown_mode) {
 		val8 = rtl_read_byte(rtlpriv, REG_HSISR);
-		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"pwrdown, 0x5c(BIT(7))=%02x\n", val8);
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+			 "pwrdown, 0x5c(BIT(7))=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(7)) ? ERFOFF : ERFON;
 	} else {
 		rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG)&~(BIT(3)));
 		val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
-		//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"GPIO_IN=%02x\n", val8);
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"GPIO_IN=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(3)) ? ERFON: ERFOFF;
 	}
 	return rfpowerstate;
@@ -1674,7 +1678,7 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 
 	u8 val8;
 
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD, ("CardDisableRTL8188EU\n"));
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "rtl8188eu card disable\n");
 
 	/* Stop Tx Report Timer. 0x4EC[Bit1]=b'0 */
 	val8 = rtl_read_byte(rtlpriv, REG_TX_RPT_CTRL);
@@ -1756,7 +1760,7 @@ void rtl88eu_card_disable(struct ieee80211_hw *hw)
 	enum nl80211_iftype opmode;
 
 
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "RTL8188eu card disable\n");
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "rtl8188eu card disable\n");
 	mac->link_state = MAC80211_NOLINK;
 	opmode = NL80211_IFTYPE_UNSPECIFIED;
 
