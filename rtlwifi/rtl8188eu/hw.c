@@ -39,20 +39,19 @@
 #include "pwrseq.h"
 
 
-inline u32 rtw_systime_to_ms(u32 systime)
+inline u32 rtl_systime_to_ms(u32 systime)
 {
 	return systime * 1000 / HZ;
 }
 
-inline u32 rtw_ms_to_systime(u32 ms)
+inline u32 rtl_ms_to_systime(u32 ms)
 {
 	return ms * HZ / 1000;
 }
 
-/*  the input parameter start use the same unit as returned by rtw_get_current_time */
-inline s32 rtw_get_passing_time_ms(u32 start)
+inline s32 rtl_get_passing_time_ms(u32 start)
 {
-	return rtw_systime_to_ms(jiffies-start);
+	return rtl_systime_to_ms(jiffies-start);
 }
 
 void iol_mode_enable(struct ieee80211_hw *hw, u8 enable)
@@ -90,7 +89,7 @@ s32 iol_execute(struct ieee80211_hw *hw, u8 control)
 
 	start = jiffies;
 	while ((reg_0x88 = rtl_read_byte(rtlpriv, REG_HMEBOX_E0)) & control &&
-	       (passing_time = rtw_get_passing_time_ms(start)) < 1000) {
+	       (passing_time = rtl_get_passing_time_ms(start)) < 1000) {
 		;
 	}
 
@@ -112,9 +111,9 @@ static s32 iol_InitLLTTable(struct ieee80211_hw *hw, u8 boundary)
 	return rst;
 }
 
-bool rtw_IOL_applied(struct ieee80211_hw  *hw)
+bool rtl_IOL_applied(struct ieee80211_hw  *hw)
 {
-	/* TODO!!!!!!!!! */
+	/* TODO*/
 	return true;
 }
 
@@ -122,7 +121,7 @@ s32 rtl8188e_iol_efuse_patch(struct ieee80211_hw *hw)
 {
 	s32 result = true;
 
-	if (rtw_IOL_applied(hw)) {
+	if (rtl_IOL_applied(hw)) {
 		iol_mode_enable(hw, 1);
 		result = iol_execute(hw, CMD_READ_EFUSE_MAP);
 		if (result == true)
@@ -215,7 +214,7 @@ s32 InitLLTTable(struct ieee80211_hw *hw, u8 boundary)
 	u32 i;
 	u32 Last_Entry_Of_TxPktBuf = LAST_ENTRY_OF_TX_PKT_BUFFER;/*  176, 22k */
 
-	if (rtw_IOL_applied(hw)) {
+	if (rtl_IOL_applied(hw)) {
 		status = iol_InitLLTTable(hw, boundary);
 	} else {
 		for (i = 0; i < (boundary - 1); i++) {
@@ -1101,55 +1100,6 @@ static int _rtl88eu_set_media_status(struct ieee80211_hw *hw,
 	u8 bt_msr = rtl_read_byte(rtlpriv, MSR);
 	enum led_ctl_mode ledaction = LED_CTL_NO_LINK;
 
-#if 0
-	bt_msr &= 0xfc;
-	if (type == NL80211_IFTYPE_UNSPECIFIED || type ==
-	    NL80211_IFTYPE_STATION) {
-		_rtl88eu_stop_tx_beacon(hw);
-		_rtl88eu_enable_bcn_sub_func(hw);
-	} else if (type == NL80211_IFTYPE_ADHOC || type == NL80211_IFTYPE_AP) {
-		_rtl88eu_resume_tx_beacon(hw);
-		_rtl88eu_disable_bcn_sub_func(hw);
-	} else {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-			 "Set HW_VAR_MEDIA_STATUS:No such media status(%x)\n",
-			 type);
-	}
-	switch (type) {
-	case NL80211_IFTYPE_UNSPECIFIED:
-		bt_msr |= MSR_NOLINK;
-		ledaction = LED_CTL_LINK;
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
-			 "Set Network type to NO LINK!\n");
-		break;
-	case NL80211_IFTYPE_ADHOC:
-		bt_msr |= MSR_ADHOC;
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
-			 "Set Network type to Ad Hoc!\n");
-		break;
-	case NL80211_IFTYPE_STATION:
-		bt_msr |= MSR_INFRA;
-		ledaction = LED_CTL_LINK;
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
-			 "Set Network type to STA!\n");
-		break;
-	case NL80211_IFTYPE_AP:
-		bt_msr |= MSR_AP;
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_TRACE,
-			 "Set Network type to AP!\n");
-		break;
-	default:
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-			 "Network type %d not supported!\n", type);
-		goto error_out;
-	}
-	rtl_write_byte(rtlpriv, MSR, bt_msr);
-	rtlpriv->cfg->ops->led_control(hw, ledaction);
-	if (bt_msr == MSR_AP)
-		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-	else
-		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-#else
 	rtl_write_byte(rtlpriv, REG_BCN_CTRL,
 		       rtl_read_byte(rtlpriv, REG_BCN_CTRL) | BIT(4));
 	bt_msr &= 0x0c;
@@ -1217,7 +1167,6 @@ static int _rtl88eu_set_media_status(struct ieee80211_hw *hw,
 			 "Set HW_VAR_MEDIA_STATUS:No such media status(%x)\n",
 			 type);
 	}
-#endif
 	return 0;
 error_out:
 	return 1;
@@ -1828,8 +1777,10 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 static void _rtl8188eu_hw_power_down(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	/*  2010/-8/09 MH For power down module, we need to enable register block contrl reg at 0x1c. */
-	/*  Then enable power down control bit of register 0x04 BIT(4) and BIT(15) as 1. */
+	/*  2010/-8/09 MH For power down module,
+	 *  we need to enable register block contrl reg at 0x1c.
+	 *  Then enable power down control bit of register 0x04 BIT(4)
+	 *  and BIT(15) as 1. */
 
 	/*  Enable register area 0x0-0xc. */
 	rtl_write_byte(rtlpriv, REG_RSV_CTRL, 0x0);
@@ -1892,66 +1843,6 @@ void rtl88eu_read_eeprom_info(struct ieee80211_hw *hw)
 
 	_rtl88eu_read_adapter_info(hw);
 }
-
-#if 0
-static void hw_var_set_opmode(struct ieee80211_hw *hw, u8 variable, u8 *val)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u8 val8;
-	u8 mode = *((u8 *)val);
-
-	/*  disable Port0 TSF update */
-	rtl_write_byte(rtlpriv, REG_BCN_CTRL, rtl_read_byte(rtlpriv, REG_BCN_CTRL)|BIT(4));
-
-	/*  set net_type */
-	val8 = rtl_read_byte(rtlpriv, MSR)&0x0c;
-	val8 |= mode;
-	rtl_write_byte(rtlpriv, MSR, val8);
-
-	//RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"%s()-%d mode = %d\n", __func__, __LINE__, mode);
-
-	if ((mode == _HW_STATE_STATION_) || (mode == _HW_STATE_NOLINK_)) {
-		_rtl88eu_stop_tx_beacon(hw);
-
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x19);/* disable atim wnd */
-	} else if ((mode == _HW_STATE_ADHOC_)) {
-		_rtl88eu_resume_tx_beacon(hw);
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x1a);
-	} else if (mode == _HW_STATE_AP_) {
-		_rtl88eu_resume_tx_beacon(hw);
-
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL, 0x12);
-
-		/* Set RCR */
-		rtl_write_dword(rtlpriv, REG_RCR, 0x7000208e);/* CBSSID_DATA must set to 0,reject ICV_ERR packet */
-		/* enable to rx data frame */
-		rtl_write_word(rtlpriv, REG_RXFLTMAP2, 0xFFFF);
-		/* enable to rx ps-poll */
-		rtl_write_word(rtlpriv, REG_RXFLTMAP1, 0x0400);
-
-		/* Beacon Control related register for first time */
-		rtl_write_byte(rtlpriv, REG_BCNDMATIM, 0x02); /*  2ms */
-
-		rtl_write_byte(rtlpriv, REG_ATIMWND, 0x0a); /*  10ms */
-		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x00);
-		rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0xff04);
-		rtl_write_word(rtlpriv, REG_TSFTR_SYN_OFFSET, 0x7fff);/*  +32767 (~32ms) */
-
-		/* reset TSF */
-		rtl_write_byte(rtlpriv, REG_DUAL_TSF_RST, BIT(0));
-
-		/* BIT(3) - If set 0, hw will clr bcnq when tx becon ok/fail or port 0 */
-		rtl_write_byte(rtlpriv, REG_MBID_NUM, rtl_read_byte(rtlpriv, REG_MBID_NUM) | BIT(3) | BIT(4));
-
-		/* enable BCN0 Function for if1 */
-		/* don't enable update TSF0 for if1 (due to TSF update when beacon/probe rsp are received) */
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL, (DIS_TSF_UDT0_NORMAL_CHIP|EN_BCN_FUNCTION | BIT(1)));
-
-		/* dis BCN1 ATIM  WND if if2 is station */
-		rtl_write_byte(rtlpriv, REG_BCN_CTRL_1, rtl_read_byte(rtlpriv, REG_BCN_CTRL_1) | BIT(0));
-	}
-}
-#endif
 
 void rtl88eu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 {
@@ -2385,7 +2276,7 @@ void rtl88eu_set_beacon_related_registers(struct ieee80211_hw *hw)
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 	u32 value32;
-	u32 bcn_ctrl_reg			= REG_BCN_CTRL;
+	u32 bcn_ctrl_reg = REG_BCN_CTRL;
 	/* reset TSF, enable update TSF, correcting TSF On Beacon */
 
 	/* BCN interval */
