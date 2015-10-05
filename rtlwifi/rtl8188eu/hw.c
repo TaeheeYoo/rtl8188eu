@@ -173,10 +173,12 @@ static void rtl88eu_hal_notch_filter(struct ieee80211_hw *hw, bool enable)
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	if (enable) {
 		rtl_write_byte(rtlpriv, ROFDM0_RXDSP+1,
-			       rtl_read_byte(rtlpriv, ROFDM0_RXDSP + 1) | BIT(1));
+			       rtl_read_byte(rtlpriv, ROFDM0_RXDSP + 1) |
+					     BIT(1));
 	} else {
 		rtl_write_byte(rtlpriv, ROFDM0_RXDSP+1,
-			       rtl_read_byte(rtlpriv, ROFDM0_RXDSP + 1) & ~BIT(1));
+			       rtl_read_byte(rtlpriv, ROFDM0_RXDSP + 1) &
+					     ~BIT(1));
 	}
 }
 
@@ -283,15 +285,17 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 
 
 	if (!rtlefuse->autoload_failflag) {
-		rtlefuse->eeprom_vid = EF2BYTE(*(__le16 *)&hwinfo[EEPROM_VID_88EU]);
-		rtlefuse->eeprom_did = EF2BYTE(*(__le16 *)&hwinfo[EEPROM_PID_88EU]);
+		rtlefuse->eeprom_vid =
+			EF2BYTE(*(__le16 *)&hwinfo[EEPROM_VID_88EU]);
+		rtlefuse->eeprom_did =
+			EF2BYTE(*(__le16 *)&hwinfo[EEPROM_PID_88EU]);
 
 		rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMERID_88E];
 	} else {
 		rtlefuse->eeprom_vid = EEPROM_Default_VID;
 		rtlefuse->eeprom_did = EEPROM_Default_PID;
 
-		rtlefuse->eeprom_oemid		= EEPROM_Default_CustomerID;
+		rtlefuse->eeprom_oemid = EEPROM_Default_CustomerID;
 	}
 
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
@@ -356,11 +360,14 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 		rtlefuse->board_type = 0;
 
 	if (!rtlefuse->autoload_failflag)
-		rtlefuse->eeprom_thermalmeter = hwinfo[EEPROM_THERMAL_METER_88E];
+		rtlefuse->eeprom_thermalmeter =
+			hwinfo[EEPROM_THERMAL_METER_88E];
 	else
-		rtlefuse->eeprom_thermalmeter = EEPROM_DEFAULT_THERMALMETER;
+		rtlefuse->eeprom_thermalmeter =
+			EEPROM_DEFAULT_THERMALMETER;
 
-	if (rtlefuse->eeprom_thermalmeter == 0xff || rtlefuse->autoload_failflag) {
+	if (rtlefuse->eeprom_thermalmeter == 0xff ||
+	    rtlefuse->autoload_failflag) {
 		rtlefuse->apk_thermalmeterignore = true;
 		rtlefuse->eeprom_thermalmeter = EEPROM_DEFAULT_THERMALMETER;
 	}
@@ -402,7 +409,8 @@ static void _rtl88eu_read_adapter_info(struct ieee80211_hw *hw)
 
 }
 
-static void _Hal_ReadPowerValueFromPROM_8188E(struct ieee80211_hw *hw, struct txpower_info_2g *pwrInfo24G, u8 *PROMContent)
+static void _Hal_ReadPowerValueFromPROM_8188E(struct ieee80211_hw *hw,
+		struct txpower_info_2g *pwrInfo24G, u8 *PROMContent)
 {
 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
 
@@ -604,11 +612,12 @@ void Hal_ReadTxPowerInfo88E(struct ieee80211_hw *hw, u8 *PROMContent)
 
 
 #endif
-	/* 2010/10/19 MH Add Regulator recognize for CU. */
 	if (!rtlefuse->autoload_failflag) {
-		rtlefuse->eeprom_regulatory = (PROMContent[EEPROM_RF_BOARD_OPTION_88E]&0x7);	/* bit0~2 */
+		rtlefuse->eeprom_regulatory =
+			(PROMContent[EEPROM_RF_BOARD_OPTION_88E] & 0x7);
 		if (PROMContent[EEPROM_RF_BOARD_OPTION_88E] == 0xFF)
-			rtlefuse->eeprom_regulatory = (EEPROM_DEFAULT_BOARD_OPTION&0x7);	/* bit0~2 */
+			rtlefuse->eeprom_regulatory =
+				(EEPROM_DEFAULT_BOARD_OPTION & 0x7);
 	} else {
 		rtlefuse->eeprom_regulatory = 0;
 	}
@@ -680,7 +689,8 @@ static void _TwoOutEpMapping(struct ieee80211_hw *hw, struct rtl_ep_map *ep_map)
 	}
 }
 
-static void _ThreeOutEpMapping(struct ieee80211_hw *hw, struct rtl_ep_map *ep_map)
+static void _ThreeOutEpMapping(struct ieee80211_hw *hw,
+			       struct rtl_ep_map *ep_map)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
@@ -749,10 +759,8 @@ int rtl8188eu_endpoint_mapping(struct ieee80211_hw *hw)
 		if (1 != rtlusb->in_ep_nums)
 			return result;
 	}
-
 	/*  All config other than above support one Bulk IN and one
 	 *  Interrupt IN. */
-
 	result = _out_ep_mapping(hw);
 
 	return result;
@@ -777,18 +785,15 @@ static u32 rtl8188eu_InitPowerOn(struct ieee80211_hw *hw)
 		return false;
 	}
 
-	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
-	/*  Set CR bit10 to enable 32k calibration.
-	 *  Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
+	/* Enable MAC DMA/WMAC/SCHEDULE/SEC block
+	 * Set CR bit10 to enable 32k calibration. */
 	rtl_write_word(rtlpriv, REG_CR, 0x00);
-	/* suggseted by zhouzhou, by page, 20111230 */
 
-	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
+	/* Enable MAC DMA/WMAC/SCHEDULE/SEC block */
 	value16 = rtl_read_word(rtlpriv, REG_CR);
 	value16 |= (HCI_TXDMA_EN | HCI_RXDMA_EN | TXDMA_EN | RXDMA_EN
 				| PROTOCOL_EN | SCHEDULE_EN | ENSEC | CALTMR_EN);
-	/*  for SDIO - Set CR bit10 to enable 32k calibration.
-	 *  Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
+	/* for SDIO - Set CR bit10 to enable 32k calibration. */
 
 	rtl_write_word(rtlpriv, REG_CR, value16);
 	/* TODO */
@@ -850,9 +855,9 @@ static void _InitInterrupt(struct ieee80211_hw *hw)
 	rtl_write_dword(rtlpriv, REG_HIMRE_88E, imr_ex);
 	rtlusb->irq_mask[1] = imr_ex;
 
-	/*  REG_USB_SPECIAL_OPTION - BIT(4) */
-	/*  0; Use interrupt endpoint to upload interrupt pkt */
-	/*  1; Use bulk endpoint to upload interrupt pkt, */
+	/* REG_USB_SPECIAL_OPTION - BIT(4) */
+	/* 0; Use interrupt endpoint to upload interrupt pkt */
+	/* 1; Use bulk endpoint to upload interrupt pkt, */
 	usb_opt = rtl_read_byte(rtlpriv, REG_USB_SPECIAL_OPTION);
 
 	/* TODO */
@@ -1476,7 +1481,9 @@ enum rf_pwrstate RfOnOffDetect(struct ieee80211_hw *hw)
 			 "pwrdown, 0x5c(BIT(7))=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(7)) ? ERFOFF : ERFON;
 	} else {
-		rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG)&~(BIT(3)));
+		rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG,
+			       rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG) &
+					     ~(BIT(3)));
 		val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,"GPIO_IN=%02x\n", val8);
 		rfpowerstate = (val8 & BIT(3)) ? ERFON: ERFOFF;
@@ -1693,12 +1700,12 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 				 RTL8188EE_NIC_LPS_ENTER_FLOW);
 
 	/*  2. 0x1F[7:0] = 0 turn off RF */
-
 	val8 = rtl_read_byte(rtlpriv, REG_MCUFWDL);
 	if ((val8 & RAM_DL_SEL) && rtlhal->fw_ready) { /* 8051 RAM code */
 		/* Reset MCU 0x2[10]=0. */
 		val8 = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN+1);
-		val8 &= ~BIT(2);	/*  0x2[10], FEN_CPUEN */
+		/*  0x2[10], FEN_CPUEN */
+		val8 &= ~BIT(2);
 		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN+1, val8);
 	}
 
@@ -1720,15 +1727,13 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 	val8 = rtl_read_byte(rtlpriv, REG_RSV_CTRL+1);
 	rtl_write_byte(rtlpriv, REG_RSV_CTRL+1, val8|BIT(3));
 
-	/* YJ,test add, 111207. For Power Consumption. */
 	val8 = rtl_read_byte(rtlpriv, GPIO_IN);
 	rtl_write_byte(rtlpriv, GPIO_OUT, val8);
-	rtl_write_byte(rtlpriv, GPIO_IO_SEL, 0xFF);/* Reg0x46 */
+	rtl_write_byte(rtlpriv, GPIO_IO_SEL, 0xFF);
 
 	val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL, (val8<<4));
 	val8 = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL+1);
-	/* Reg0x43 */
 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL+1, val8|0x0F);
 	/* set LNA ,TRSW,EX_PA Pin to output mode */
 	rtl_write_dword(rtlpriv, REG_BB_PAD_CTRL, 0x00080808);
@@ -1741,8 +1746,7 @@ static void CardDisableRTL8188EU(struct ieee80211_hw *hw)
 static void _rtl8188eu_hw_power_down(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	/*  2010/-8/09 MH For power down module,
-	 *  we need to enable register block contrl reg at 0x1c.
+	/*  we need to enable register block contrl reg at 0x1c.
 	 *  Then enable power down control bit of register 0x04 BIT(4)
 	 *  and BIT(15) as 1. */
 
@@ -1751,7 +1755,6 @@ static void _rtl8188eu_hw_power_down(struct ieee80211_hw *hw)
 	rtl_write_word(rtlpriv, REG_APS_FSMCO, 0x8812);
 }
 
-/* TODO */
 void rtl88eu_card_disable(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -2140,7 +2143,7 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 							     REG_TDECTRL+2);
 				rtl_write_byte(rtlpriv, REG_TDECTRL+2,
 					       (bcnvalid_reg | BIT(0)));
-				/* TODO!!!!!!!!*/
+				/* TODO */
 #if 0
 				_rtl88eu_return_beacon_queue_skb(hw);
 #endif
@@ -2245,7 +2248,7 @@ void rtl88eu_set_beacon_related_registers(struct ieee80211_hw *hw)
 
 	/* BCN interval */
 	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, mac->beacon_interval);
-	rtl_write_byte(rtlpriv, REG_ATIMWND, 0x02);/*  2ms */
+	rtl_write_byte(rtlpriv, REG_ATIMWND, 0x02);/* 2ms */
 
 	_InitBeaconParameters(hw);
 
@@ -2266,11 +2269,13 @@ void rtl88eu_set_beacon_related_registers(struct ieee80211_hw *hw)
 
 	_rtl88eu_resume_tx_beacon(hw);
 
-	rtl_write_byte(rtlpriv, bcn_ctrl_reg, rtl_read_byte(rtlpriv, bcn_ctrl_reg)|BIT(1));
+	rtl_write_byte(rtlpriv, bcn_ctrl_reg,
+		       rtl_read_byte(rtlpriv, bcn_ctrl_reg) | BIT(1));
 }
 
 static void rtl88eu_update_hal_rate_mask(struct ieee80211_hw *hw,
-		struct ieee80211_sta *sta, u8 rssi_level)
+					 struct ieee80211_sta *sta,
+					 u8 rssi_level)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
