@@ -1666,10 +1666,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl_write_dword(rtlpriv, REG_FWHW_TXQ_CTRL,
 			rtl_read_dword(rtlpriv, REG_FWHW_TXQ_CTRL)|BIT(12));
 	rtl88e_dm_init(hw);
-	/* TODO */
-#if 0
 	rtl88eu_hal_notch_filter(hw, 0);
-#endif
 	local_irq_restore(flags);
 	return 0;
 exit:
