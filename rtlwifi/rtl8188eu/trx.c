@@ -23,6 +23,7 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
@@ -687,7 +688,8 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
 	txdesc = (u8 *)skb_push(skb, RTL_TX_HEADER_SIZE);
 	memset(txdesc, 0, RTL_TX_HEADER_SIZE);
 	SET_TX_DESC_PKT_SIZE(txdesc, pktlen);
-	//SET_TX_DESC_LINIP(txdesc, 0);
+	/* TODO */
+	/* SET_TX_DESC_LINIP(txdesc, 0); */
 	SET_TX_DESC_PKT_OFFSET(txdesc, RTL_DUMMY_OFFSET);
 	SET_TX_DESC_OFFSET(txdesc, RTL_TX_HEADER_SIZE);
 	SET_TX_DESC_TX_RATE(txdesc, tcb_desc->hw_rate);
@@ -756,7 +758,7 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
 			break;
 		}
 	}
-	//SET_TX_DESC_PKT_ID(txdesc, 0);
+	/* SET_TX_DESC_PKT_ID(txdesc, 0); */
 	SET_TX_DESC_QUEUE_SEL(txdesc, fw_qsel);
 	SET_TX_DESC_DATA_RATE_FB_LIMIT(txdesc, 0x1F);
 	SET_TX_DESC_RTS_RATE_FB_LIMIT(txdesc, 0xF);
@@ -781,7 +783,7 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
 	      ppsc->fwctrl_lps) {
 		SET_TX_DESC_HWSEQ_EN(txdesc, 1);
 		/* TODO */
-		//SET_TX_DESC_PKT_ID(txdesc, 8);
+		/* SET_TX_DESC_PKT_ID(txdesc, 8); */
 		if (!defaultadapter)
 			SET_TX_DESC_QOS(txdesc, 1);
 	}
@@ -818,13 +820,8 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 
 	seq_number = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
 	rtl_get_tcb_desc(hw, info, sta, skb, ptcb_desc);
-#if 0
 	txdesc = (u8 *)skb_push(skb, RTL_TX_HEADER_SIZE);
 	memset(txdesc, 0, RTL_TX_HEADER_SIZE);
-#else
-	txdesc = (u8 *)skb_push(skb, RTL_TX_DESC_SIZE);
-	memset(txdesc, 0, RTL_TX_DESC_SIZE);
-#endif
 	
 	SET_TX_DESC_OWN(txdesc, 1);
 	SET_TX_DESC_LAST_SEG(txdesc, 1);
@@ -878,7 +875,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		if (ieee80211_is_data_qos(fc))
 			SET_TX_DESC_QOS(txdesc, 1);
 		/* TODO */
-		// USB_TXAGG_NUM
+		/* USB_TXAGG_NUM */
 		
 		/* TODO */
 #if 0
@@ -886,12 +883,14 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 #else
 		if (1) {
 #endif
-			//vcs;
+			/* vcs; */
 			SET_TX_DESC_RTS_ENABLE(txdesc, 1);
 			SET_TX_DESC_HW_RTS_ENABLE(txdesc, 1);
-			//SET_TX_DESC_RTS_BW
-			//channel offset...
-			//phy;
+			/* TODO */
+			/* SET_TX_DESC_RTS_BW
+			 * channel offset...
+			 * phy;
+			 */
 			SET_TX_DESC_RTS_RATE(txdesc, 8);
 			SET_TX_DESC_DATA_RATE_FB_LIMIT(txdesc, 0x1f);
 			SET_TX_DESC_RTS_RATE_FB_LIMIT(txdesc, 0xf);
@@ -899,7 +898,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 				SET_TX_DESC_DATA_SHORTGI(txdesc, 1);
 			SET_TX_DESC_TX_RATE(txdesc, ptcb_desc->hw_rate);
 			/* TODO */
-			//SET_TX_DESC_PWR_STATUS(txdesc, pwr_status);
+			/* SET_TX_DESC_PWR_STATUS(txdesc, pwr_status); */
 		} else {
 			SET_TX_DESC_AGG_BREAK(txdesc, 1);
 			if (ptcb_desc->use_shortpreamble)

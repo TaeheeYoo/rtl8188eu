@@ -24,8 +24,8 @@
  *
  *****************************************************************************/
 
-#ifndef __RTL92C_DEF_H__
-#define __RTL92C_DEF_H__
+#ifndef __RTL88EU_DEF_H__
+#define __RTL88EU_DEF_H__
 
 #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
 #define HAL_PRIME_CHNL_OFFSET_LOWER			1

@@ -19,12 +19,13 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
 
-#ifndef __RTL88E_REG_H__
-#define __RTL88E_REG_H__
+#ifndef __RTL88EU_REG_H__
+#define __RTL88EU_REG_H__
 
 #define TXPKT_BUF_SELECT			0x69
 #define RXPKT_BUF_SELECT			0xA5
