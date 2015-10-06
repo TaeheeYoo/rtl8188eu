@@ -19,6 +19,7 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
@@ -265,16 +266,8 @@ bool rtl88e_phy_bb_config(struct ieee80211_hw *hw)
 		       regval | BIT(13) | BIT(0) | BIT(1));
 
 	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
-#if 0
-	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN,
-		       FEN_PPLL | FEN_PCIEA | FEN_DIO_PCIE |
-		       FEN_BB_GLB_RSTN | FEN_BBRSTB);
-#else
 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN,
 		       FEN_USBA | FEN_USBD | FEN_BB_GLB_RSTN | FEN_BBRSTB);
-
-
-#endif
 	tmp = rtl_read_dword(rtlpriv, 0x4c);
 	rtl_write_dword(rtlpriv, 0x4c, tmp | BIT(23));
 	if (b_reg_hwparafile == 1)
