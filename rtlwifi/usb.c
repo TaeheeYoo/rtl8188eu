@@ -421,15 +421,12 @@ static void rtl_usb_init_sw(struct ieee80211_hw *hw)
 	/* QOS */
 	rtlusb->acm_method = EACMWAY2_SW;
 
-	/* TODO */
-#if 0
 	/* IRQ */
 	/* HIMR - turn all on */
 	rtlusb->irq_mask[0] = 0xFFFFFFFF;
 	/* HIMR_EX - turn all on */
 	rtlusb->irq_mask[1] = 0xFFFFFFFF;
 	rtlusb->disableHWSM =  true;
-#endif
 }
 
 static void _rtl_rx_completed(struct urb *urb);
@@ -451,7 +448,7 @@ static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
 	usb_fill_bulk_urb(urb, rtlusb->udev,
 			  usb_rcvbulkpipe(rtlusb->udev, rtlusb->in_ep),
 			  buf, rtlusb->rx_max_size, _rtl_rx_completed, rtlusb);
-	//urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
+	urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 	return 0;
 }
 
@@ -939,7 +936,7 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
 	_rtl_install_trx_info(rtlusb, skb, ep_num);
 	usb_fill_bulk_urb(_urb, rtlusb->udev, usb_sndbulkpipe(rtlusb->udev,
 			  ep_num), skb->data, skb->len, _rtl_tx_complete, skb);
-	//_urb->transfer_flags |= URB_ZERO_PACKET;
+	/* _urb->transfer_flags |= URB_ZERO_PACKET; */
 	return _urb;
 }
 
