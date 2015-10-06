@@ -416,94 +416,6 @@ bool rtl88eu_rx_query_desc(struct ieee80211_hw *hw,
 			   struct ieee80211_rx_status *rx_status,
 			   u8 *pdesc, struct sk_buff *skb)
 {
-#if 0
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rx_fwinfo_88e *p_drvinfo;
-	struct ieee80211_hdr *hdr;
-
-	status->crc = (u16)GET_RX_DESC_CRC32(pdesc);
-	status->packet_report_type = (u8)GET_RX_STATUS_DESC_RPT_SEL(pdesc);
-	if (status->packet_report_type == NORMAL_RX) {
-		status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
-		status->rx_drvinfo_size = (u8)GET_RX_DESC_DRV_INFO_SIZE(pdesc) *
-			RX_DRV_INFO_SIZE_UNIT;
-		status->physt = GET_RX_DESC_PHYST(pdesc);
-		status->decrypted = !GET_RX_DESC_SWDEC(pdesc);
-		/* TODO security */
-		status->qos = (bool)GET_RX_DESC_QOS(pdesc);
-		/* TODO QUEUE_SEL */
-		status->rate = (u8)GET_RX_DESC_RXMCS(pdesc);
-		status->frag_num = (u8)GET_RX_DESC_FRAG(pdesc);
-		status->mfrag = (u8)GET_RX_DESC_MF(pdesc);
-		status->is_ht = (bool)GET_RX_DESC_RXHT(pdesc);
-		status->icv = (u16)GET_RX_DESC_ICV(pdesc);
-		status->rx_bufshift = (u8)(GET_RX_DESC_SHIFT(pdesc) & 0x03);
-	} else if (status->packet_report_type == TX_REPORT1) {
-		status->length = 8;
-		status->rx_drvinfo_size = 0;
-	} else if (status->packet_report_type == TX_REPORT2) {
-		status->length = (u16)GET_RX_RPT2_DESC_PKT_LEN(pdesc);
-		status->rx_drvinfo_size = 0;
-		status->macid_valid_entry[0] =
-			 GET_RX_RPT2_DESC_MACID_VALID_1(pdesc);
-		status->macid_valid_entry[1] =
-			 GET_RX_RPT2_DESC_MACID_VALID_2(pdesc);
-	} else if (status->packet_report_type == HIS_REPORT) {
-		status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
-	}
-
-	//status->is_cck = RTL8188_RX_HAL_IS_CCK_RATE(status->rate);
-
-	rx_status->freq = hw->conf.chandef.chan->center_freq;
-	rx_status->band = hw->conf.chandef.chan->band;
-
-	hdr = (struct ieee80211_hdr *)(skb->data + status->rx_drvinfo_size
-			+ status->rx_bufshift);
-
-	if (status->crc)
-		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-
-	if (status->is_ht)
-		rx_status->flag |= RX_FLAG_HT;
-
-	rx_status->flag |= RX_FLAG_MACTIME_START;
-
-	/* hw will set status->decrypted true, if it finds the
-	 * frame is open data frame or mgmt frame.
-	 * So hw will not decryption robust managment frame
-	 * for IEEE80211w but still set status->decrypted
-	 * true, so here we should set it back to undecrypted
-	 * for IEEE80211w frame, and mac80211 sw will help
-	 * to decrypt it
-	 */
-	if (status->decrypted) {
-		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
-		    (ieee80211_has_protected(hdr->frame_control)))
-			rx_status->flag |= RX_FLAG_DECRYPTED;
-		else
-			rx_status->flag &= ~RX_FLAG_DECRYPTED;
-	}
-
-	/* rate_idx: index of data rate into band's
-	 * supported rates or MCS index if HT rates
-	 * are use (RX_FLAG_HT)
-	 * Notice: this is diff with windows define
-	 */
-	rx_status->rate_idx = rtlwifi_rate_mapping(hw, status->is_ht,
-						   false, status->rate);
-
-	//rx_status->mactime = status->timestamp_low;
-	if (status->physt == true) {
-		p_drvinfo = (struct rx_fwinfo_88e *)(skb->data +
-						     status->rx_bufshift);
-
-		_rtl88ee_translate_rx_signal_stuff(hw,
-						   skb, status, pdesc,
-						   p_drvinfo);
-	}
-	//rx_status->signal = status->recvsignalpower + 10;
-	return true;
-#else
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rx_fwinfo_88e *p_drvinfo;
 	struct ieee80211_hdr *hdr;
@@ -604,8 +516,6 @@ bool rtl88eu_rx_query_desc(struct ieee80211_hw *hw,
 			 GET_RX_RPT2_DESC_MACID_VALID_2(pdesc);
 	}
 	return true;
-
-#endif
 }
 
 #define RTL_RX_DRV_INFO_UNIT		8
