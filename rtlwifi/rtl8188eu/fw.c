@@ -625,8 +625,6 @@ void rtl88eu_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
 
 void rtl88eu_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
 {
-	/* TODO */
-#if 1
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 
@@ -701,5 +699,4 @@ void rtl88eu_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
 		rtl_write_byte(rtlpriv, REG_CR + 1,
 			       rtl_read_byte(rtlpriv, REG_CR + 1) | (~BIT(0)));
 	}
-#endif
 }

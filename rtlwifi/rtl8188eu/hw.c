@@ -2109,71 +2109,9 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 	case HW_VAR_FW_PSMODE_STATUS:
 		ppsc->fw_current_inpsmode = *((bool *)val);
 		break;
-	case HW_VAR_H2C_FW_JOINBSSRPT:{
-		u8 mstatus = *val;
-		u8 tmp_regcr, tmp_reg422, bcnvalid_reg;
-		u8 count = 0, dlbcn_count = 0;
-		bool b_recover = false;
-
-		if (mstatus == RT_MEDIA_CONNECT) {
-			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_AID,
-						      NULL);
-
-			tmp_regcr = rtl_read_byte(rtlpriv, REG_CR + 1);
-			rtl_write_byte(rtlpriv, REG_CR + 1,
-				       (tmp_regcr | BIT(0)));
-
-			_rtl88eu_set_bcn_ctrl_reg(hw, 0, BIT(3));
-			_rtl88eu_set_bcn_ctrl_reg(hw, BIT(4), 0);
-
-			tmp_reg422 =
-			    rtl_read_byte(rtlpriv,
-					  REG_FWHW_TXQ_CTRL + 2);
-			rtl_write_byte(rtlpriv, REG_FWHW_TXQ_CTRL + 2,
-				       tmp_reg422 & (~BIT(6)));
-			if (tmp_reg422 & BIT(6))
-				b_recover = true;
-
-			do {
-				bcnvalid_reg = rtl_read_byte(rtlpriv,
-							     REG_TDECTRL+2);
-				rtl_write_byte(rtlpriv, REG_TDECTRL+2,
-					       (bcnvalid_reg | BIT(0)));
-				/* TODO */
-#if 0
-				_rtl88eu_return_beacon_queue_skb(hw);
-#endif
-
-				rtl88eu_set_fw_rsvdpagepkt(hw, 0);
-				bcnvalid_reg = rtl_read_byte(rtlpriv,
-							     REG_TDECTRL+2);
-				count = 0;
-				while (!(bcnvalid_reg & BIT(0)) && count < 20) {
-					count++;
-					udelay(10);
-					bcnvalid_reg =
-					  rtl_read_byte(rtlpriv, REG_TDECTRL+2);
-				}
-				dlbcn_count++;
-			} while (!(bcnvalid_reg & BIT(0)) && dlbcn_count < 5);
-
-			if (bcnvalid_reg & BIT(0))
-				rtl_write_byte(rtlpriv, REG_TDECTRL+2, BIT(0));
-
-			_rtl88eu_set_bcn_ctrl_reg(hw, BIT(3), 0);
-			_rtl88eu_set_bcn_ctrl_reg(hw, 0, BIT(4));
-
-			if (b_recover) {
-				rtl_write_byte(rtlpriv,
-					       REG_FWHW_TXQ_CTRL + 2,
-					       tmp_reg422);
-			}
-
-			rtl_write_byte(rtlpriv, REG_CR + 1,
-				       (tmp_regcr & ~(BIT(0))));
-		}
+	case HW_VAR_H2C_FW_JOINBSSRPT:
 		rtl88eu_set_fw_joinbss_report_cmd(hw, (*(u8 *)val));
-		break; }
+		break;
 	case HW_VAR_H2C_FW_P2P_PS_OFFLOAD:
 		break;
 	case HW_VAR_AID:{
