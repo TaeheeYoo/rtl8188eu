@@ -1555,7 +1555,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	u32 status = true;
 	unsigned long flags;
 	/* TODO */
-#if 0
+#if 1
 	rtlusb->wmm_enable = false;
 #else
 	rtlusb->wmm_enable = true;
@@ -1570,7 +1570,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "init mac failed!\n");
 		goto exit;
 	}
-	status = rtl88e_download_fw(hw, false);
+	status = rtl88eu_download_fw(hw, false);
 	if (status) {
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 			 "Download Firmware failed!!\n");
@@ -1579,7 +1579,11 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	}
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 		 "Download Firmware Success!!\n");
-	//rtlhal->fw_ready = true;
+#if 1
+	rtlhal->fw_ready = false;
+#else
+	rtlhal->fw_ready = true;
+#endif
 	rtlhal->last_hmeboxnum = 0;
 	rtlphy->iqk_initialized = false;
 	rtlphy->pwrgroup_cnt = 0;
@@ -2100,7 +2104,7 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 	case HW_VAR_SET_RPWM:
 		break;
 	case HW_VAR_H2C_FW_PWRMODE:
-		rtl88e_set_fw_pwrmode_cmd(hw, *val);
+		rtl88eu_set_fw_pwrmode_cmd(hw, *val);
 		break;
 	case HW_VAR_FW_PSMODE_STATUS:
 		ppsc->fw_current_inpsmode = *((bool *)val);
@@ -2140,7 +2144,7 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 				_rtl88eu_return_beacon_queue_skb(hw);
 #endif
 
-				rtl88e_set_fw_rsvdpagepkt(hw, 0);
+				rtl88eu_set_fw_rsvdpagepkt(hw, 0);
 				bcnvalid_reg = rtl_read_byte(rtlpriv,
 							     REG_TDECTRL+2);
 				count = 0;
@@ -2168,10 +2172,9 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 			rtl_write_byte(rtlpriv, REG_CR + 1,
 				       (tmp_regcr & ~(BIT(0))));
 		}
-		rtl88e_set_fw_joinbss_report_cmd(hw, (*(u8 *)val));
+		rtl88eu_set_fw_joinbss_report_cmd(hw, (*(u8 *)val));
 		break; }
 	case HW_VAR_H2C_FW_P2P_PS_OFFLOAD:
-		rtl88e_set_p2p_ps_offload_cmd(hw, *val);
 		break;
 	case HW_VAR_AID:{
 		u16 u2btmp;
@@ -2204,7 +2207,7 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 
 		array[0] = 0xff;
 		array[1] = *((u8 *)val);
-		rtl88e_fill_h2c_cmd(hw, H2C_88E_KEEP_ALIVE_CTRL,
+		rtl88eu_fill_h2c_cmd(hw, H2C_88E_KEEP_ALIVE_CTRL,
 				    2, array);
 		break; }
 	default:
@@ -2392,7 +2395,9 @@ static void rtl88eu_update_hal_rate_mask(struct ieee80211_hw *hw,
 		 rate_mask[0], rate_mask[1],
 		 rate_mask[2], rate_mask[3],
 		 rate_mask[4]);
-	rtl88e_fill_h2c_cmd(hw, H2C_88E_RA_MASK, 5, rate_mask);
+#if 0
+	rtl88eu_fill_h2c_cmd(hw, H2C_88E_RA_MASK, 5, rate_mask);
+#endif
 	_rtl88eu_set_bcn_ctrl_reg(hw, BIT(3), 0);
 }
 

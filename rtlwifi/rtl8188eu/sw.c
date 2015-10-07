@@ -162,7 +162,7 @@ static struct rtl_hal_ops rtl8188eu_hal_ops = {
 	.get_rfreg = rtl88e_phy_query_rf_reg,
 	.set_rfreg = rtl88e_phy_set_rf_reg,
 	.phy_lc_calibrate = rtl88e_phy_lc_calibrate,
-	.fill_h2c_cmd = rtl88e_fill_h2c_cmd,
+	.fill_h2c_cmd = rtl88eu_fill_h2c_cmd,
 	.get_btc_status = rtl88eu_get_btc_status,
 };
 

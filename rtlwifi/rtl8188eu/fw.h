@@ -22,12 +22,14 @@
  * wlanfae <wlanfae@realtek.com>
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
+ *
+ * Taehee Yoo	<ap420073@gmail.com>
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
 
-#ifndef __RTL92C__FW__H__
-#define __RTL92C__FW__H__
+#ifndef __RTL88EU__FW__H__
+#define __RTL88EU__FW__H__
 
 #define FW_8192C_SIZE				0x8000
 #define FW_8192C_START_ADDRESS			0x1000
@@ -189,6 +191,23 @@ enum rtl8188e_h2c_cmd {
 	MAX_88E_H2CCMD
 };
 
+enum power_mgnt {
+	PS_MODE_ACTIVE = 0,
+	PS_MODE_MIN,
+	PS_MODE_MAX,
+	PS_MODE_DTIM,
+	PS_MODE_VOIP,
+	PS_MODE_UAPSD_WMM,
+	PS_MODE_UAPSD,
+	PS_MODE_IBSS,
+	PS_MODE_WWLAN,
+	PM_Radio_Off,
+	PM_Card_Disable,
+	PS_MODE_NUM
+};
+
+
+
 #define pagenum_128(_len)	(u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
 
 #define SET_88E_H2CCMD_WOWLAN_FUNC_ENABLE(__cmd, __value)		\
@@ -290,15 +309,14 @@ enum rtl8188e_h2c_cmd {
 #define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_INFO(__cmd, __value)	\
 	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __value)
 
-int rtl88e_download_fw(struct ieee80211_hw *hw,
-		       bool buse_wake_on_wlan_fw);
-void rtl88e_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
-			 u32 cmd_len, u8 *cmdbuffer);
-void rtl88e_firmware_selfreset(struct ieee80211_hw *hw);
-void rtl88e_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
-void rtl88e_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
-void rtl88e_set_fw_ap_off_load_cmd(struct ieee80211_hw *hw,
-				   u8 ap_offload_enable);
-void rtl88e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished);
-void rtl88e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state);
+int rtl88eu_download_fw(struct ieee80211_hw *hw,
+			bool buse_wake_on_wlan_fw);
+void rtl88eu_fill_h2c_cmd(struct ieee80211_hw *hw,
+			  u8 element_id, u32 cmd_len, u8 *cmdbuffer);
+void rtl88eu_firmware_selfreset(struct ieee80211_hw *hw);
+void rtl88eu_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
+void rtl88eu_set_fw_media_status_cmd(struct ieee80211_hw *hw,
+				     __le16 status_rpt);
+void rtl88eu_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished);
+void rtl88eu_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
 #endif
