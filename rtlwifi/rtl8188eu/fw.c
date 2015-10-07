@@ -671,10 +671,13 @@ void rtl88eu_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
 			} while (!bcn_valid && (poll%10) != 0);
 		} while ((!bcn_valid) && (dlbcn_cnt <= 100));
 
-		if (!bcn_valid)
-			printk("Download RSVD page failed!\n");
-		else
-			printk("Download RSVD success!\n");
+		if (!bcn_valid) {
+			RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+				 "Download RSVD page failed!\n");
+		} else {
+			RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+				 "Download RSVD success!\n");
+		}
 
 		rtl_write_byte(rtlpriv, REG_BCN_CTRL,
 			       rtl_read_byte(rtlpriv, REG_BCN_CTRL) | BIT(3));
