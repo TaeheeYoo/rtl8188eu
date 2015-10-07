@@ -1334,18 +1334,14 @@ static void _InitRetryFunction(struct ieee80211_hw *hw)
 
 static void usb_AggSettingTxUpdate(struct ieee80211_hw *hw)
 {
-	/* TODO */
-#if 1
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
 
 	u32 value32;
 
-	/*
-	if (Adapter->registrypriv.wifi_spec)
-		haldata->UsbTxAggMode = false;
-	*/
+	if (rtlusb->wmm_enable)
+		rtlusb->usb_tx_agg_mode = false;
 
 	if (rtlusb->usb_tx_agg_mode) {
 		value32 = rtl_read_dword(rtlpriv, REG_TDECTRL);
@@ -1354,7 +1350,6 @@ static void usb_AggSettingTxUpdate(struct ieee80211_hw *hw)
 
 		rtl_write_dword(rtlpriv, REG_TDECTRL, value32);
 	}
-#endif
 }
 
 static void usb_AggSettingRxUpdate( struct ieee80211_hw *hw)

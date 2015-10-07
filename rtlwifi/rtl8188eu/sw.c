@@ -182,7 +182,6 @@ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
 
 #define RTL88E_USB_BULK_IN_NUM			1
 #define RTL88E_NUM_RX_URBS			32
-#define RTL88E_NUM_TX_URBS			1
 
 static struct rtl_hal_usbint_cfg rtl88eu_interface_cfg = {
 	/* rx */
