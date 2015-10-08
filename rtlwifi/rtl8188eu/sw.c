@@ -172,7 +172,6 @@ static struct rtl_mod_params rtl88eu_mod_params = {
 	.fwctrl_lps = false,
 	.swctrl_lps = false,
 	.debug = DBG_EMERG,
-	//.disable_watchdog = true,
 };
 
 module_param_named(swenc, rtl88eu_mod_params.sw_crypto, bool, 0444);

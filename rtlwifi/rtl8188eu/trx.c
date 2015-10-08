@@ -920,7 +920,6 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		SET_TX_DESC_DATA_RETRY_LIMIT(txdesc, 0x6);
 		SET_TX_DESC_TX_RATE(txdesc, 1);
 	} else {
-		printk("[TEST]unkonwn frame type\n");
 		SET_TX_DESC_MACID(txdesc, ptcb_desc->mac_id);
 		SET_TX_DESC_RATE_ID(txdesc, ptcb_desc->ratr_index);
 		SET_TX_DESC_SEQ(txdesc, seq_number);
