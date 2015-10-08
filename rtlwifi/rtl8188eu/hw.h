@@ -83,9 +83,9 @@
 #define	EEPROM_VID_88EU			0xD0
 #define	EEPROM_PID_88EU			0xD2
 
-#define EEPROM_Default_PID		0x1234
-#define EEPROM_Default_VID		0x5678
-#define EEPROM_Default_CustomerID	0xAB
+#define EEPROM_DEFAULT_PID		0x1234
+#define EEPROM_DEFAULT_VID		0x5678
+#define EEPROM_DEFAULT_CUSTOMERID	0xAB
 #define	EEPROM_Default_CustomerID_8188E	0x00
 #define EEPROM_Default_SubCustomerID	0xCD
 #define EEPROM_Default_Version		0
@@ -98,7 +98,7 @@
 
 #define REG_TSFTR_SYN_OFFSET		0x0518
 #define REG_BCN_CTRL_1			0x0551
-#define EEPROM_Default_CrystalCap_88E	0x20
+#define EEPROM_DEFAULT_CRYSTALCAP_88E	0x20
 #define	EEPROM_Default_ThermalMeter_88E	0x18
 
 #define	IMR_CPWM_88E			BIT(8)

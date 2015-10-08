@@ -104,6 +104,8 @@ enum rtl_usb_state {
 		(rtlusb_ptr)->state = USB_STATE_START;		\
 	} while (0)
 
+#define IS_HIGH_SPEED_USB(udev) \
+		((USB_SPEED_HIGH == (udev)->speed) ? true : false)
 
 enum rx_agg_mode {
 	USB_RX_AGG_DISABLE,

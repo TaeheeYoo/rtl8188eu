@@ -280,9 +280,6 @@ static struct sk_buff *_none_usb_tx_aggregate_hdl(struct ieee80211_hw *hw,
 	return skb_dequeue(list);
 }
 
-#define IS_HIGH_SPEED_USB(udev) \
-		((USB_SPEED_HIGH == (udev)->speed) ? true : false)
-
 static int _rtl_usb_init_tx(struct ieee80211_hw *hw)
 {
 	u32 i;
