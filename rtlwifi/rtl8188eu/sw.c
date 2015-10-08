@@ -195,7 +195,7 @@ static struct rtl_hal_usbint_cfg rtl88eu_interface_cfg = {
 	.usb_tx_post_hdl = rtl8188eu_tx_post_hdl,
 	.usb_tx_aggregate_hdl = rtl8188eu_tx_aggregate_hdl,
 	/* endpoint mapping */
-	.usb_endpoint_mapping = rtl8188eu_endpoint_mapping,
+	.usb_endpoint_mapping = rtl88eu_endpoint_mapping,
 	.usb_mq_to_hwq = rtl8188eu_mq_to_hwq,
 };
 

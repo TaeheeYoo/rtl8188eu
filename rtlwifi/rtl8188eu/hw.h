@@ -108,21 +108,18 @@
 #define	IMR_RXFOVW_88E			BIT(8)
 
 
-void iol_mode_enable(struct ieee80211_hw *hw, u8 enable);
-s32 iol_execute(struct ieee80211_hw *hw, u8 control);
-bool rtw_IOL_applied(struct ieee80211_hw  *hw);
+void rtl88eu_iol_mode_enable(struct ieee80211_hw *hw, u8 enable);
+s32 rtl88eu_iol_execute(struct ieee80211_hw *hw, u8 control);
+bool rtl88eu_iol_applied(struct ieee80211_hw  *hw);
 s32 rtl8188e_iol_efuse_patch(struct ieee80211_hw *hw);
-void _8051Reset88E(struct ieee80211_hw *hw);
 void rtl88eu_read_chip_version(struct ieee80211_hw *hw);
-s32 InitLLTTable(struct ieee80211_hw *hw, u8 txpktbuf_bndy);
-void Hal_ReadPowerSavingMode88E(struct ieee80211_hw *hw, u8 *hwinfo);
-void Hal_ReadTxPowerInfo88E(struct ieee80211_hw *hw, u8 *PROMContent);
+s32 rtl88eu_init_llt_table(struct ieee80211_hw *hw, u8 txpktbuf_bndy);
 void rtl88eu_set_qos(struct ieee80211_hw *hw, int aci);
 void rtl88eu_enable_interrupt(struct ieee80211_hw *hw);
 void rtl88eu_disable_interrupt(struct ieee80211_hw *hw);
 void rtl88eu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid);
 int rtl88eu_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type);
-enum rf_pwrstate RfOnOffDetect(struct ieee80211_hw *hw);
+enum rf_pwrstate rtl88eu_rf_on_off_detect(struct ieee80211_hw *hw);
 int rtl88eu_hw_init(struct ieee80211_hw *hw);
 void rtl88eu_card_disable(struct ieee80211_hw *hw);
 void rtl88eu_read_eeprom_info(struct ieee80211_hw *hw);
@@ -140,6 +137,6 @@ void rtl88eu_set_key(struct ieee80211_hw *hw, u32 key_index,
 		     u8 *p_macaddr, bool is_group, u8 enc_algo,
 		     bool is_wepkey, bool clear_all);
 void rtl88eu_enable_hw_security_config(struct ieee80211_hw *hw);
-int  rtl8188eu_endpoint_mapping(struct ieee80211_hw *hw);
+int rtl88eu_endpoint_mapping(struct ieee80211_hw *hw);
 
 #endif
