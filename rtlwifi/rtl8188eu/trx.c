@@ -883,14 +883,10 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 #else
 		if (1) {
 #endif
-			/* vcs; */
-			SET_TX_DESC_RTS_ENABLE(txdesc, 1);
-			SET_TX_DESC_HW_RTS_ENABLE(txdesc, 1);
-			/* TODO */
-			/* SET_TX_DESC_RTS_BW
-			 * channel offset...
-			 * phy;
-			 */
+			/* SET_TX_DESC_RTS_ENABLE(txdesc, 1); */
+			/* SET_TX_DESC_HW_RTS_ENABLE(txdesc, 1); */
+			SET_TX_DESC_DATA_BW(txdesc, 1);
+			SET_TX_DESC_TX_SUB_CARRIER(txdesc, 3);
 			SET_TX_DESC_RTS_RATE(txdesc, 8);
 			SET_TX_DESC_DATA_RATE_FB_LIMIT(txdesc, 0x1f);
 			SET_TX_DESC_RTS_RATE_FB_LIMIT(txdesc, 0xf);

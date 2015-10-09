@@ -138,7 +138,7 @@ static struct rtl_hal_ops rtl8188eu_hal_ops = {
 	.get_hw_reg = rtl88eu_get_hw_reg,
 	.set_hw_reg = rtl88eu_set_hw_reg,
 	.update_rate_tbl = rtl88eu_update_hal_rate_tbl,
-#if 0
+#if 1
 	.fill_tx_desc = rtl88eu_tx_fill_desc,
 #else
 	.fill_tx_desc = rtl92cu_tx_fill_desc,
@@ -340,7 +340,7 @@ static struct usb_driver rtl8188eu_driver = {
 	/* .resume = rtl_usb_resume, */
 	/* .reset_resume = rtl8188eu_resume, */
 #endif /* CONFIG_PM */
-	//.disable_hub_initiated_lpm = 1,
+	/* .disable_hub_initiated_lpm = 1, */
 };
 
 module_usb_driver(rtl8188eu_driver);

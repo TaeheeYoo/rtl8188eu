@@ -1786,13 +1786,11 @@ void rtl88eu_card_disable(struct ieee80211_hw *hw)
 	rtl_write_dword(rtlpriv, REG_HIMR_88E, IMR_DISABLED_88E);
 	rtl_write_dword(rtlpriv, REG_HIMRE_88E, IMR_DISABLED_88E);
 
-	if (ppsc->rfpwr_state == ERFON) {
-			_rtl88eu_hw_power_down(hw);
-	} else {
-		_rtl88eu_card_disable(hw);
-		_rtl88eu_hw_power_down(hw);
-	}
-
+	_rtl88eu_card_disable(hw);
+	/* TODO */
+#if 0
+	_rtl88eu_hw_power_down(hw);
+#endif
 	rtlpriv->phy.iqk_initialized = false;
 }
 
