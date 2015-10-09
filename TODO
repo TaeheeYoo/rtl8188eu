@@ -6,4 +6,5 @@ TODO
 - validae locks
 - support mesh mode
 - fix kernel panic
-- fix usb3.0 performance issue
+- fix usb issue
+
