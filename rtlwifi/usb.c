@@ -46,6 +46,8 @@ MODULE_DESCRIPTION("USB basic driver for rtlwifi");
 #define REALTEK_USB_VENQT_CMD_REQ		0x05
 #define	REALTEK_USB_VENQT_CMD_IDX		0x00
 
+#define MAX_USBCTRL_VENDORREQ_TIMES             10
+
 static void usbctrl_async_callback(struct urb *urb)
 {
 	if (urb) {
@@ -110,7 +112,6 @@ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
 	return rc;
 }
 
-#define FW_8188E_SIZE			0x4000 /* 16384,16k */
 #define FW_8188E_START_ADDRESS		0x1000
 #define FW_8188E_END_ADDRESS		0x1FFF /* 0x5FFF */
 
@@ -138,11 +139,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
 		} else {
 			break;
 		}
-#if 0
 	} while (++vendorreq_times < MAX_USBCTRL_VENDORREQ_TIMES);
-#else
-	} while (++vendorreq_times < 10);
-#endif
 
 	if (status < 0 && count++ < 4)
 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
