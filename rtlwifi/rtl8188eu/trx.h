@@ -655,8 +655,17 @@ struct rx_desc_88e {
 #define SET_TX_DESC_DATA_RETRY_LIMIT(__pdesc, __val)	\
 	SET_BITS_TO_LE_4BYTE(__pdesc+20, 18, 6, __val)
 
-#define SET_TX_DESC_MAX_AGG_NUM(__pdesc, __val)		\
+#define SET_TX_DESC_MAX_AGG_NUM(__pdesc, __val)         \
 	SET_BITS_TO_LE_4BYTE(__pdesc+24, 11, 5, __val)
+#define SET_TX_DESC_MCSG1_MAX_LEN(__pdesc, __val)       \
+	SET_BITS_TO_LE_4BYTE(__pdesc+24, 16, 4, __val)
+#define SET_TX_DESC_MCSG2_MAX_LEN(__pdesc, __val)       \
+	SET_BITS_TO_LE_4BYTE(__pdesc+24, 20, 4, __val)
+#define SET_TX_DESC_MCSG3_MAX_LEN(__pdesc, __val)       \
+	SET_BITS_TO_LE_4BYTE(__pdesc+24, 24, 4, __val)
+#define SET_TX_DESC_MCS7_SGI_MAX_LEN(__pdesc, __val)    \
+	SET_BITS_TO_LE_4BYTE(__pdesc+24, 28, 4, __val)
+
 
 #define SET_TX_DESC_TX_DESC_CHECKSUM(__txdesc, __value) \
 	SET_BITS_TO_LE_4BYTE(__txdesc+28, 0, 16, __value)

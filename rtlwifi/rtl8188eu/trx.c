@@ -865,7 +865,11 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		}
 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
 			SET_TX_DESC_AGG_ENABLE(txdesc, 1);
-			SET_TX_DESC_MAX_AGG_NUM(txdesc, 0x14);
+			SET_TX_DESC_MAX_AGG_NUM(txdesc, 0x1f);
+			SET_TX_DESC_MCSG1_MAX_LEN(txdesc, 6);
+			SET_TX_DESC_MCSG2_MAX_LEN(txdesc, 6);
+			SET_TX_DESC_MCSG3_MAX_LEN(txdesc, 6);
+			SET_TX_DESC_MCS7_SGI_MAX_LEN(txdesc, 6);
 		} else {
 			SET_TX_DESC_AGG_BREAK(txdesc, 1);
 		}
