@@ -930,7 +930,7 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
 	_rtl_install_trx_info(rtlusb, skb, ep_num);
 	usb_fill_bulk_urb(_urb, rtlusb->udev, usb_sndbulkpipe(rtlusb->udev,
 			  ep_num), skb->data, skb->len, _rtl_tx_complete, skb);
-	/* _urb->transfer_flags |= URB_ZERO_PACKET; */
+	_urb->transfer_flags |= URB_ZERO_PACKET;
 	return _urb;
 }
 
@@ -1007,6 +1007,7 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
 		seq_number += 1;
 		seq_number <<= 4;
 	}
+	rtl_is_special_data(hw, skb, true, true);
 	rtlpriv->cfg->ops->fill_tx_desc(hw, hdr, (u8 *)pdesc, NULL, info, sta, skb,
 					hw_queue, &tcb_desc);
 	if (!ieee80211_has_morefrags(hdr->frame_control)) {

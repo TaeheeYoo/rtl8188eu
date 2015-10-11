@@ -810,6 +810,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 			  u8 hw_queue, struct rtl_tcb_desc *ptcb_desc)
 
 {
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 	u16 seq_number;
 	__le16 fc = hdr->frame_control;
@@ -881,12 +882,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		/* TODO */
 		/* USB_TXAGG_NUM */
 		
-		/* TODO */
-#if 0
-		if (!special_packet) {
-#else
-		if (1) {
-#endif
+		if (!rtlpriv->ra.is_special_data) {
 			/* SET_TX_DESC_RTS_ENABLE(txdesc, 1); */
 			/* SET_TX_DESC_HW_RTS_ENABLE(txdesc, 1); */
 			SET_TX_DESC_DATA_BW(txdesc, 1);
@@ -912,7 +908,7 @@ void rtl88eu_tx_fill_desc(struct ieee80211_hw *hw,
 		/* TODO */
 #if 0
 		if (pxmitframe->ack_report)
-			ptxdesc->txdw2 |= cpu_to_le32(BIT(19));
+			SET_TX_DESC_CCX(txdesc, 1);
 #endif
 		SET_TX_DESC_SEQ(txdesc, seq_number);
 		SET_TX_DESC_RETRY_LIMIT_ENABLE(txdesc, 1);

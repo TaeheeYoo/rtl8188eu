@@ -220,8 +220,9 @@ static void rtl_tx_status(void *ppriv,
 						       tid)) {
 					sta_entry->tids[tid].agg.agg_state =
 						RTL_AGG_PROGRESS;
+					/* TODO */
 					ieee80211_start_tx_ba_session(sta, tid,
-								      5000);
+								      0);
 				}
 			}
 		}
