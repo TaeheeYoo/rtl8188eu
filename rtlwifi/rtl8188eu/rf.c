@@ -154,7 +154,7 @@ void rtl88e_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
 		 RTXAGC_B_CCK1_55_MCS32);
 }
 
-static void rtl88e_phy_get_power_base(struct ieee80211_hw *hw,
+static void _rtl88e_phy_get_power_base(struct ieee80211_hw *hw,
 				      u8 *ppowerlevel_ofdm,
 				      u8 *ppowerlevel_bw20,
 				      u8 *ppowerlevel_bw40, u8 channel,
@@ -392,7 +392,7 @@ void rtl88e_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
 	u8 direction;
 	u32 pwrtrac_value;
 
-	rtl88e_phy_get_power_base(hw, ppowerlevel_ofdm,
+	_rtl88e_phy_get_power_base(hw, ppowerlevel_ofdm,
 				  ppowerlevel_bw20, ppowerlevel_bw40,
 				  channel, &powerbase0[0], &powerbase1[0]);
 

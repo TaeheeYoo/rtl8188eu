@@ -1023,7 +1023,7 @@ static void dm_txpower_track_cb_therm(struct ieee80211_hw *hw)
 	/* 6 If necessary, do LCK.*/
 	if (delta_lck >= 8) {
 		rtlpriv->dm.thermalvalue_lck = thermalvalue;
-		rtl88e_phy_lc_calibrate(hw, false);
+		rtlpriv->cfg->ops->phy_lc_calibrate(hw, false);
 	}
 
 	/* 7 If necessary, move the index of

@@ -397,22 +397,23 @@ void rtl88eu_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
 		      "rtl88eu_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
 		      u1_h2c_set_pwrmode, H2C_88E_PWEMODE_LENGTH);
-	rtl88eu_fill_h2c_cmd(hw, H2C_88E_SETPWRMODE,
-			    H2C_88E_PWEMODE_LENGTH, u1_h2c_set_pwrmode);
+	rtlpriv->cfg->ops->fill_h2c_cmd(hw, H2C_88E_SETPWRMODE,
+					H2C_88E_PWEMODE_LENGTH, u1_h2c_set_pwrmode);
 
 }
 
 void rtl88eu_set_fw_media_status_cmd(struct ieee80211_hw *hw,
 				     __le16 status_rpt)
 {
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	u8 opmode, macid;
 	u16 mst_rpt = le16_to_cpu(status_rpt);
 	
 	opmode = (u8)mst_rpt;
 	macid = (u8)(mst_rpt >> 8);
 
-	rtl88eu_fill_h2c_cmd(hw, 1,
-			     sizeof(mst_rpt), (u8 *)&mst_rpt);
+	rtlpriv->cfg->ops->fill_h2c_cmd(hw, 1,
+					sizeof(mst_rpt), (u8 *)&mst_rpt);
 
 }
 
@@ -615,8 +616,8 @@ void rtl88eu_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
 			 "Set RSVD page location to Fw.\n");
 		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
 			      "H2C_RSVDPAGE:\n", u1rsvdpageloc, 3);
-		rtl88eu_fill_h2c_cmd(hw, H2C_88E_RSVDPAGE,
-				    sizeof(u1rsvdpageloc), u1rsvdpageloc);
+		rtlpriv->cfg->ops->fill_h2c_cmd(hw, H2C_88E_RSVDPAGE,
+						sizeof(u1rsvdpageloc), u1rsvdpageloc);
 	} else
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
 			 "Set RSVD page location to Fw FAIL!!!!!!.\n");

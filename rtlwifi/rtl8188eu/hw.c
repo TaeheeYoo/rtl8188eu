@@ -1222,9 +1222,9 @@ int rtl88eu_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type)
 
 	if (rtlpriv->mac80211.link_state == MAC80211_LINKED) {
 		if (type != NL80211_IFTYPE_AP)
-			rtl88eu_set_check_bssid(hw, true);
+			rtlpriv->cfg->ops->set_chk_bssid(hw, true);
 	} else {
-		rtl88eu_set_check_bssid(hw, false);
+		rtlpriv->cfg->ops->set_chk_bssid(hw, false);
 	}
 
 	return 0;
@@ -1632,7 +1632,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl_write_word(rtlpriv, REG_PKT_BE_BK_LIFE_TIME, 0x0400);
 	_rtl88eu_bb_turn_on_block(hw);
 	rtl_cam_reset_all_entry(hw);
-	rtl88eu_enable_hw_security_config(hw);
+	rtlpriv->cfg->ops->enable_hw_sec(hw);
 	ppsc->rfpwr_state = ERFON;
 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
 	rtl88e_phy_set_txpower_level(hw, rtlphy->current_channel);
@@ -1670,7 +1670,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 			rtlphy->iqk_initialized = true;
 		}
 		rtl88e_dm_check_txpower_tracking(hw);
-		rtl88e_phy_lc_calibrate(hw, false);
+		rtlpriv->cfg->ops->phy_lc_calibrate(hw, false);
 	}
 
 	rtl_write_byte(rtlpriv, REG_USB_HRPWM, 0);
@@ -2153,7 +2153,7 @@ void rtl88eu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 
 		array[0] = 0xff;
 		array[1] = *((u8 *)val);
-		rtl88eu_fill_h2c_cmd(hw, H2C_88E_KEEP_ALIVE_CTRL,
+		rtlpriv->cfg->ops->fill_h2c_cmd(hw, H2C_88E_KEEP_ALIVE_CTRL,
 				    2, array);
 		break; }
 	default:
@@ -2342,7 +2342,7 @@ static void rtl88eu_update_hal_rate_mask(struct ieee80211_hw *hw,
 		 rate_mask[2], rate_mask[3],
 		 rate_mask[4]);
 #if 0
-	rtl88eu_fill_h2c_cmd(hw, H2C_88E_RA_MASK, 5, rate_mask);
+	rtlpriv->cfg->ops->fill_h2c_cmd(hw, H2C_88E_RA_MASK, 5, rate_mask);
 #endif
 	_rtl88eu_set_bcn_ctrl_reg(hw, BIT(3), 0);
 }
