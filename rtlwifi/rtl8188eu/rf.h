@@ -23,8 +23,8 @@
  *
  *****************************************************************************/
 
-#ifndef __RTL92C_RF_H__
-#define __RTL92C_RF_H__
+#ifndef __RTL88EU_RF_H__
+#define __RTL88EU_RF_H__
 
 #define RF6052_MAX_TX_PWR		0x3F
 

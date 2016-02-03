@@ -34,133 +34,15 @@
 #include "dm.h"
 #include "table.h"
 
-static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
-				      enum radio_path rfpath, u32 offset);
-static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
-					enum radio_path rfpath, u32 offset,
-					u32 data);
-static u32 _rtl88e_phy_calculate_bit_shift(u32 bitmask);
-static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw);
-static bool _rtl88e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw);
-static bool phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
-					  u8 configtype);
-static bool phy_config_bb_with_pghdr(struct ieee80211_hw *hw,
-				     u8 configtype);
-static void _rtl88e_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw);
-static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
-					     u32 cmdtableidx, u32 cmdtablesz,
-					     enum swchnlcmd_id cmdid, u32 para1,
-					     u32 para2, u32 msdelay);
-static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
-					     u8 channel, u8 *stage, u8 *step,
-					     u32 *delay);
-
-static long _rtl88e_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
-					 enum wireless_mode wirelessmode,
-					 u8 txpwridx);
-static void rtl88ee_phy_set_rf_on(struct ieee80211_hw *hw);
-static void rtl88e_phy_set_io(struct ieee80211_hw *hw);
-
-u32 rtl88e_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitmask)
+static u32 _rtl88e_phy_calculate_bit_shift(u32 bitmask)
 {
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u32 returnvalue, originalvalue, bitshift;
+	u32 i;
 
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), bitmask(%#x)\n", regaddr, bitmask);
-	originalvalue = rtl_read_dword(rtlpriv, regaddr);
-	bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
-	returnvalue = (originalvalue & bitmask) >> bitshift;
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "BBR MASK=0x%x Addr[0x%x]=0x%x\n", bitmask,
-		 regaddr, originalvalue);
-
-	return returnvalue;
-
-}
-
-void rtl88e_phy_set_bb_reg(struct ieee80211_hw *hw,
-			   u32 regaddr, u32 bitmask, u32 data)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u32 originalvalue, bitshift;
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
-		 regaddr, bitmask, data);
-
-	if (bitmask != MASKDWORD) {
-		originalvalue = rtl_read_dword(rtlpriv, regaddr);
-		bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
-		data = ((originalvalue & (~bitmask)) | (data << bitshift));
+	for (i = 0; i <= 31; i++) {
+		if (((bitmask >> i) & 0x1) == 1)
+			break;
 	}
-
-	rtl_write_dword(rtlpriv, regaddr, data);
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
-		 regaddr, bitmask, data);
-}
-
-u32 rtl88e_phy_query_rf_reg(struct ieee80211_hw *hw,
-			    enum radio_path rfpath, u32 regaddr, u32 bitmask)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u32 original_value, readback_value, bitshift;
-	unsigned long flags;
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), rfpath(%#x), bitmask(%#x)\n",
-		 regaddr, rfpath, bitmask);
-
-	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-
-
-	original_value = _rtl88e_phy_rf_serial_read(hw, rfpath, regaddr);
-	bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
-	readback_value = (original_value & bitmask) >> bitshift;
-
-	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
-		  regaddr, rfpath, bitmask, original_value);
-	return readback_value;
-}
-
-void rtl88e_phy_set_rf_reg(struct ieee80211_hw *hw,
-			   enum radio_path rfpath,
-			   u32 regaddr, u32 bitmask, u32 data)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u32 original_value, bitshift;
-	unsigned long flags;
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
-		  regaddr, bitmask, data, rfpath);
-
-	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-
-	if (bitmask != RFREG_OFFSET_MASK) {
-			original_value = _rtl88e_phy_rf_serial_read(hw,
-								    rfpath,
-								    regaddr);
-			bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
-			data =
-			    ((original_value & (~bitmask)) |
-			     (data << bitshift));
-		}
-
-	_rtl88e_phy_rf_serial_write(hw, rfpath, regaddr, data);
-
-
-	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-
-	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-		 "regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
-		 regaddr, bitmask, data, rfpath);
+	return i;
 }
 
 static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
@@ -233,51 +115,128 @@ static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
 		 rfpath, pphyreg->rf3wire_offset, data_and_addr);
 }
 
-static u32 _rtl88e_phy_calculate_bit_shift(u32 bitmask)
+static bool _rtl88e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
 {
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	u32 i;
+	u32 arraylength;
+	u32 *ptrarray;
 
-	for (i = 0; i <= 31; i++) {
-		if (((bitmask >> i) & 0x1) == 1)
-			break;
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl8188EMACPHY_Array\n");
+	arraylength = RTL8188EEMAC_1T_ARRAYLEN;
+	ptrarray = RTL8188EEMAC_1T_ARRAY;
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+		 "Img:RTL8188EEMAC_1T_ARRAY LEN %d\n", arraylength);
+	for (i = 0; i < arraylength; i = i + 2)
+		rtl_write_byte(rtlpriv, ptrarray[i], (u8)ptrarray[i + 1]);
+	return true;
+}
+
+static void _rtl88e_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfintfs = RFPGA0_XAB_RFINTERFACESW;
+	rtlphy->phyreg_def[RF90_PATH_B].rfintfs = RFPGA0_XAB_RFINTERFACESW;
+	rtlphy->phyreg_def[RF90_PATH_C].rfintfs = RFPGA0_XCD_RFINTERFACESW;
+	rtlphy->phyreg_def[RF90_PATH_D].rfintfs = RFPGA0_XCD_RFINTERFACESW;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfintfi = RFPGA0_XAB_RFINTERFACERB;
+	rtlphy->phyreg_def[RF90_PATH_B].rfintfi = RFPGA0_XAB_RFINTERFACERB;
+	rtlphy->phyreg_def[RF90_PATH_C].rfintfi = RFPGA0_XCD_RFINTERFACERB;
+	rtlphy->phyreg_def[RF90_PATH_D].rfintfi = RFPGA0_XCD_RFINTERFACERB;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfintfo = RFPGA0_XA_RFINTERFACEOE;
+	rtlphy->phyreg_def[RF90_PATH_B].rfintfo = RFPGA0_XB_RFINTERFACEOE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfintfe = RFPGA0_XA_RFINTERFACEOE;
+	rtlphy->phyreg_def[RF90_PATH_B].rfintfe = RFPGA0_XB_RFINTERFACEOE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rf3wire_offset =
+	    RFPGA0_XA_LSSIPARAMETER;
+	rtlphy->phyreg_def[RF90_PATH_B].rf3wire_offset =
+	    RFPGA0_XB_LSSIPARAMETER;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = RFPGA0_XAB_RFPARAMETER;
+	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = RFPGA0_XAB_RFPARAMETER;
+	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = RFPGA0_XCD_RFPARAMETER;
+	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = RFPGA0_XCD_RFPARAMETER;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rftxgain_stage = RFPGA0_TXGAINSTAGE;
+	rtlphy->phyreg_def[RF90_PATH_B].rftxgain_stage = RFPGA0_TXGAINSTAGE;
+	rtlphy->phyreg_def[RF90_PATH_C].rftxgain_stage = RFPGA0_TXGAINSTAGE;
+	rtlphy->phyreg_def[RF90_PATH_D].rftxgain_stage = RFPGA0_TXGAINSTAGE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para1 = RFPGA0_XA_HSSIPARAMETER1;
+	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para1 = RFPGA0_XB_HSSIPARAMETER1;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para2 = RFPGA0_XA_HSSIPARAMETER2;
+	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para2 = RFPGA0_XB_HSSIPARAMETER2;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfsw_ctrl =
+	    RFPGA0_XAB_SWITCHCONTROL;
+	rtlphy->phyreg_def[RF90_PATH_B].rfsw_ctrl =
+	    RFPGA0_XAB_SWITCHCONTROL;
+	rtlphy->phyreg_def[RF90_PATH_C].rfsw_ctrl =
+	    RFPGA0_XCD_SWITCHCONTROL;
+	rtlphy->phyreg_def[RF90_PATH_D].rfsw_ctrl =
+	    RFPGA0_XCD_SWITCHCONTROL;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control1 = ROFDM0_XAAGCCORE1;
+	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control1 = ROFDM0_XBAGCCORE1;
+	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control1 = ROFDM0_XCAGCCORE1;
+	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control1 = ROFDM0_XDAGCCORE1;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control2 = ROFDM0_XAAGCCORE2;
+	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control2 = ROFDM0_XBAGCCORE2;
+	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control2 = ROFDM0_XCAGCCORE2;
+	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control2 = ROFDM0_XDAGCCORE2;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfrxiq_imbal = ROFDM0_XARXIQIMBALANCE;
+	rtlphy->phyreg_def[RF90_PATH_B].rfrxiq_imbal = ROFDM0_XBRXIQIMBALANCE;
+	rtlphy->phyreg_def[RF90_PATH_C].rfrxiq_imbal = ROFDM0_XCRXIQIMBANLANCE;
+	rtlphy->phyreg_def[RF90_PATH_D].rfrxiq_imbal = ROFDM0_XDRXIQIMBALANCE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rfrx_afe = ROFDM0_XARXAFE;
+	rtlphy->phyreg_def[RF90_PATH_B].rfrx_afe = ROFDM0_XBRXAFE;
+	rtlphy->phyreg_def[RF90_PATH_C].rfrx_afe = ROFDM0_XCRXAFE;
+	rtlphy->phyreg_def[RF90_PATH_D].rfrx_afe = ROFDM0_XDRXAFE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rftxiq_imbal = ROFDM0_XATXIQIMBALANCE;
+	rtlphy->phyreg_def[RF90_PATH_B].rftxiq_imbal = ROFDM0_XBTXIQIMBALANCE;
+	rtlphy->phyreg_def[RF90_PATH_C].rftxiq_imbal = ROFDM0_XCTXIQIMBALANCE;
+	rtlphy->phyreg_def[RF90_PATH_D].rftxiq_imbal = ROFDM0_XDTXIQIMBALANCE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rftx_afe = ROFDM0_XATXAFE;
+	rtlphy->phyreg_def[RF90_PATH_B].rftx_afe = ROFDM0_XBTXAFE;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rf_rb = RFPGA0_XA_LSSIREADBACK;
+	rtlphy->phyreg_def[RF90_PATH_B].rf_rb = RFPGA0_XB_LSSIREADBACK;
+
+	rtlphy->phyreg_def[RF90_PATH_A].rf_rbpi = TRANSCEIVEA_HSPI_READBACK;
+	rtlphy->phyreg_def[RF90_PATH_B].rf_rbpi = TRANSCEIVEB_HSPI_READBACK;
+}
+
+static void _rtl8188e_config_bb_reg(struct ieee80211_hw *hw,
+				    u32 addr, u32 data)
+{
+	if (addr == 0xfe) {
+		mdelay(50);
+	} else if (addr == 0xfd) {
+		mdelay(5);
+	} else if (addr == 0xfc) {
+		mdelay(1);
+	} else if (addr == 0xfb) {
+		udelay(50);
+	} else if (addr == 0xfa) {
+		udelay(5);
+	} else if (addr == 0xf9) {
+		udelay(1);
+	} else {
+		rtl_set_bbreg(hw, addr, MASKDWORD, data);
+		udelay(1);
 	}
-	return i;
-}
-
-bool rtl88e_phy_mac_config(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	bool rtstatus = _rtl88e_phy_config_mac_with_headerfile(hw);
-
-	rtl_write_byte(rtlpriv, 0x04CA, 0x0B);
-	return rtstatus;
-}
-
-bool rtl88e_phy_bb_config(struct ieee80211_hw *hw)
-{
-	bool rtstatus = true;
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u16 regval;
-	u8 b_reg_hwparafile = 1;
-	u32 tmp;
-	_rtl88e_phy_init_bb_rf_register_definition(hw);
-	regval = rtl_read_word(rtlpriv, REG_SYS_FUNC_EN);
-	rtl_write_word(rtlpriv, REG_SYS_FUNC_EN,
-		       regval | BIT(13) | BIT(0) | BIT(1));
-
-	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
-	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN,
-		       FEN_USBA | FEN_USBD | FEN_BB_GLB_RSTN | FEN_BBRSTB);
-	tmp = rtl_read_dword(rtlpriv, 0x4c);
-	rtl_write_dword(rtlpriv, 0x4c, tmp | BIT(23));
-	if (b_reg_hwparafile == 1)
-		rtstatus = _rtl88e_phy_bb8188e_config_parafile(hw);
-	return rtstatus;
-}
-
-bool rtl88e_phy_rf_config(struct ieee80211_hw *hw)
-{
-	return rtl88e_phy_rf6052_config(hw);
 }
 
 static bool _rtl88e_check_condition(struct ieee80211_hw *hw,
@@ -306,112 +265,6 @@ static bool _rtl88e_check_condition(struct ieee80211_hw *hw,
 	cond = cond >> 16;
 	if ((_platform & cond) == 0 && cond != 0x0F)
 		return false;
-	return true;
-}
-
-static void _rtl8188e_config_rf_reg(struct ieee80211_hw *hw, u32 addr,
-				    u32 data, enum radio_path rfpath,
-				    u32 regaddr)
-{
-	if (addr == 0xffe) {
-		mdelay(50);
-	} else if (addr == 0xfd) {
-		mdelay(5);
-	} else if (addr == 0xfc) {
-		mdelay(1);
-	} else if (addr == 0xfb) {
-		udelay(50);
-	} else if (addr == 0xfa) {
-		udelay(5);
-	} else if (addr == 0xf9) {
-		udelay(1);
-	} else {
-		rtl_set_rfreg(hw, rfpath, regaddr,
-			      RFREG_OFFSET_MASK,
-			      data);
-		udelay(1);
-	}
-}
-
-static void _rtl8188e_config_rf_radio_a(struct ieee80211_hw *hw,
-					u32 addr, u32 data)
-{
-	u32 content = 0x1000; /*RF Content: radio_a_txt*/
-	u32 maskforphyset = (u32)(content & 0xE000);
-
-	_rtl8188e_config_rf_reg(hw, addr, data, RF90_PATH_A,
-		addr | maskforphyset);
-}
-
-static void _rtl8188e_config_bb_reg(struct ieee80211_hw *hw,
-				    u32 addr, u32 data)
-{
-	if (addr == 0xfe) {
-		mdelay(50);
-	} else if (addr == 0xfd) {
-		mdelay(5);
-	} else if (addr == 0xfc) {
-		mdelay(1);
-	} else if (addr == 0xfb) {
-		udelay(50);
-	} else if (addr == 0xfa) {
-		udelay(5);
-	} else if (addr == 0xf9) {
-		udelay(1);
-	} else {
-		rtl_set_bbreg(hw, addr, MASKDWORD, data);
-		udelay(1);
-	}
-}
-
-static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
-	bool rtstatus;
-
-	rtstatus = phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_PHY_REG);
-	if (!rtstatus) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!");
-		return false;
-	}
-
-	if (!rtlefuse->autoload_failflag) {
-		rtlphy->pwrgroup_cnt = 0;
-		rtstatus =
-		  phy_config_bb_with_pghdr(hw, BASEBAND_CONFIG_PHY_REG);
-	}
-	if (!rtstatus) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!");
-		return false;
-	}
-	rtstatus =
-	  phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
-	if (!rtstatus) {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
-		return false;
-	}
-	rtlphy->cck_high_power =
-	  (bool)(rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, 0x200));
-
-	return true;
-}
-
-static bool _rtl88e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	u32 i;
-	u32 arraylength;
-	u32 *ptrarray;
-
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl8188EMACPHY_Array\n");
-	arraylength = RTL8188EEMAC_1T_ARRAYLEN;
-	ptrarray = RTL8188EEMAC_1T_ARRAY;
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-		 "Img:RTL8188EEMAC_1T_ARRAY LEN %d\n", arraylength);
-	for (i = 0; i < arraylength; i = i + 2)
-		rtl_write_byte(rtlpriv, ptrarray[i], (u8)ptrarray[i + 1]);
 	return true;
 }
 
@@ -533,6 +386,40 @@ static bool phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
 		handle_branch2(hw, arraylen, array_table);
 	}
 	return true;
+}
+
+static void _rtl8188e_config_rf_reg(struct ieee80211_hw *hw, u32 addr,
+				    u32 data, enum radio_path rfpath,
+				    u32 regaddr)
+{
+	if (addr == 0xffe) {
+		mdelay(50);
+	} else if (addr == 0xfd) {
+		mdelay(5);
+	} else if (addr == 0xfc) {
+		mdelay(1);
+	} else if (addr == 0xfb) {
+		udelay(50);
+	} else if (addr == 0xfa) {
+		udelay(5);
+	} else if (addr == 0xf9) {
+		udelay(1);
+	} else {
+		rtl_set_rfreg(hw, rfpath, regaddr,
+			      RFREG_OFFSET_MASK,
+			      data);
+		udelay(1);
+	}
+}
+
+static void _rtl8188e_config_rf_radio_a(struct ieee80211_hw *hw,
+					u32 addr, u32 data)
+{
+	u32 content = 0x1000; /*RF Content: radio_a_txt*/
+	u32 maskforphyset = (u32)(content & 0xE000);
+
+	_rtl8188e_config_rf_reg(hw, addr, data, RF90_PATH_A,
+		addr | maskforphyset);
 }
 
 static void store_pwrindex_rate_offset(struct ieee80211_hw *hw,
@@ -787,176 +674,6 @@ static void process_path_a(struct ieee80211_hw *hw,
 		_rtl8188e_config_rf_radio_a(hw, 0x52, 0x7E4BD);
 }
 
-bool rtl88e_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
-					  enum radio_path rfpath)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	bool rtstatus = true;
-	u32 *radioa_array_table;
-	u16 radioa_arraylen;
-
-	radioa_arraylen = RTL8188EE_RADIOA_1TARRAYLEN;
-	radioa_array_table = RTL8188EE_RADIOA_1TARRAY;
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-		 "Radio_A:RTL8188EE_RADIOA_1TARRAY %d\n", radioa_arraylen);
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
-	rtstatus = true;
-	switch (rfpath) {
-	case RF90_PATH_A:
-		process_path_a(hw, radioa_arraylen, radioa_array_table);
-		break;
-	case RF90_PATH_B:
-	case RF90_PATH_C:
-	case RF90_PATH_D:
-		break;
-	}
-	return true;
-}
-
-void rtl88e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-
-	rtlphy->default_initialgain[0] =
-	    (u8)rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, MASKBYTE0);
-	rtlphy->default_initialgain[1] =
-	    (u8)rtl_get_bbreg(hw, ROFDM0_XBAGCCORE1, MASKBYTE0);
-	rtlphy->default_initialgain[2] =
-	    (u8)rtl_get_bbreg(hw, ROFDM0_XCAGCCORE1, MASKBYTE0);
-	rtlphy->default_initialgain[3] =
-	    (u8)rtl_get_bbreg(hw, ROFDM0_XDAGCCORE1, MASKBYTE0);
-
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-		 "Default initial gain (c50=0x%x, c58=0x%x, c60=0x%x, c68=0x%x\n",
-		 rtlphy->default_initialgain[0],
-		 rtlphy->default_initialgain[1],
-		 rtlphy->default_initialgain[2],
-		 rtlphy->default_initialgain[3]);
-
-	rtlphy->framesync = (u8)rtl_get_bbreg(hw, ROFDM0_RXDETECTOR3,
-					      MASKBYTE0);
-	rtlphy->framesync_c34 = rtl_get_bbreg(hw, ROFDM0_RXDETECTOR2,
-					      MASKDWORD);
-
-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-		 "Default framesync (0x%x) = 0x%x\n",
-		 ROFDM0_RXDETECTOR3, rtlphy->framesync);
-}
-
-static void _rtl88e_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfintfs = RFPGA0_XAB_RFINTERFACESW;
-	rtlphy->phyreg_def[RF90_PATH_B].rfintfs = RFPGA0_XAB_RFINTERFACESW;
-	rtlphy->phyreg_def[RF90_PATH_C].rfintfs = RFPGA0_XCD_RFINTERFACESW;
-	rtlphy->phyreg_def[RF90_PATH_D].rfintfs = RFPGA0_XCD_RFINTERFACESW;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfintfi = RFPGA0_XAB_RFINTERFACERB;
-	rtlphy->phyreg_def[RF90_PATH_B].rfintfi = RFPGA0_XAB_RFINTERFACERB;
-	rtlphy->phyreg_def[RF90_PATH_C].rfintfi = RFPGA0_XCD_RFINTERFACERB;
-	rtlphy->phyreg_def[RF90_PATH_D].rfintfi = RFPGA0_XCD_RFINTERFACERB;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfintfo = RFPGA0_XA_RFINTERFACEOE;
-	rtlphy->phyreg_def[RF90_PATH_B].rfintfo = RFPGA0_XB_RFINTERFACEOE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfintfe = RFPGA0_XA_RFINTERFACEOE;
-	rtlphy->phyreg_def[RF90_PATH_B].rfintfe = RFPGA0_XB_RFINTERFACEOE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rf3wire_offset =
-	    RFPGA0_XA_LSSIPARAMETER;
-	rtlphy->phyreg_def[RF90_PATH_B].rf3wire_offset =
-	    RFPGA0_XB_LSSIPARAMETER;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = RFPGA0_XAB_RFPARAMETER;
-	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = RFPGA0_XAB_RFPARAMETER;
-	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = RFPGA0_XCD_RFPARAMETER;
-	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = RFPGA0_XCD_RFPARAMETER;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-	rtlphy->phyreg_def[RF90_PATH_B].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-	rtlphy->phyreg_def[RF90_PATH_C].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-	rtlphy->phyreg_def[RF90_PATH_D].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para1 = RFPGA0_XA_HSSIPARAMETER1;
-	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para1 = RFPGA0_XB_HSSIPARAMETER1;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para2 = RFPGA0_XA_HSSIPARAMETER2;
-	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para2 = RFPGA0_XB_HSSIPARAMETER2;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfsw_ctrl =
-	    RFPGA0_XAB_SWITCHCONTROL;
-	rtlphy->phyreg_def[RF90_PATH_B].rfsw_ctrl =
-	    RFPGA0_XAB_SWITCHCONTROL;
-	rtlphy->phyreg_def[RF90_PATH_C].rfsw_ctrl =
-	    RFPGA0_XCD_SWITCHCONTROL;
-	rtlphy->phyreg_def[RF90_PATH_D].rfsw_ctrl =
-	    RFPGA0_XCD_SWITCHCONTROL;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control1 = ROFDM0_XAAGCCORE1;
-	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control1 = ROFDM0_XBAGCCORE1;
-	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control1 = ROFDM0_XCAGCCORE1;
-	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control1 = ROFDM0_XDAGCCORE1;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control2 = ROFDM0_XAAGCCORE2;
-	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control2 = ROFDM0_XBAGCCORE2;
-	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control2 = ROFDM0_XCAGCCORE2;
-	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control2 = ROFDM0_XDAGCCORE2;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfrxiq_imbal = ROFDM0_XARXIQIMBALANCE;
-	rtlphy->phyreg_def[RF90_PATH_B].rfrxiq_imbal = ROFDM0_XBRXIQIMBALANCE;
-	rtlphy->phyreg_def[RF90_PATH_C].rfrxiq_imbal = ROFDM0_XCRXIQIMBANLANCE;
-	rtlphy->phyreg_def[RF90_PATH_D].rfrxiq_imbal = ROFDM0_XDRXIQIMBALANCE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rfrx_afe = ROFDM0_XARXAFE;
-	rtlphy->phyreg_def[RF90_PATH_B].rfrx_afe = ROFDM0_XBRXAFE;
-	rtlphy->phyreg_def[RF90_PATH_C].rfrx_afe = ROFDM0_XCRXAFE;
-	rtlphy->phyreg_def[RF90_PATH_D].rfrx_afe = ROFDM0_XDRXAFE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rftxiq_imbal = ROFDM0_XATXIQIMBALANCE;
-	rtlphy->phyreg_def[RF90_PATH_B].rftxiq_imbal = ROFDM0_XBTXIQIMBALANCE;
-	rtlphy->phyreg_def[RF90_PATH_C].rftxiq_imbal = ROFDM0_XCTXIQIMBALANCE;
-	rtlphy->phyreg_def[RF90_PATH_D].rftxiq_imbal = ROFDM0_XDTXIQIMBALANCE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rftx_afe = ROFDM0_XATXAFE;
-	rtlphy->phyreg_def[RF90_PATH_B].rftx_afe = ROFDM0_XBTXAFE;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rf_rb = RFPGA0_XA_LSSIREADBACK;
-	rtlphy->phyreg_def[RF90_PATH_B].rf_rb = RFPGA0_XB_LSSIREADBACK;
-
-	rtlphy->phyreg_def[RF90_PATH_A].rf_rbpi = TRANSCEIVEA_HSPI_READBACK;
-	rtlphy->phyreg_def[RF90_PATH_B].rf_rbpi = TRANSCEIVEB_HSPI_READBACK;
-}
-
-void rtl88e_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	u8 txpwr_level;
-	long txpwr_dbm;
-
-	txpwr_level = rtlphy->cur_cck_txpwridx;
-	txpwr_dbm = _rtl88e_phy_txpwr_idx_to_dbm(hw,
-						 WIRELESS_MODE_B, txpwr_level);
-	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
-	if (_rtl88e_phy_txpwr_idx_to_dbm(hw,
-					 WIRELESS_MODE_G,
-					 txpwr_level) > txpwr_dbm)
-		txpwr_dbm =
-		    _rtl88e_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G,
-						 txpwr_level);
-	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
-	if (_rtl88e_phy_txpwr_idx_to_dbm(hw,
-					 WIRELESS_MODE_N_24G,
-					 txpwr_level) > txpwr_dbm)
-		txpwr_dbm =
-		    _rtl88e_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
-						 txpwr_level);
-	*powerlevel = txpwr_dbm;
-}
-
 static void handle_path_a(struct rtl_efuse *rtlefuse, u8 index,
 			  u8 *cckpowerlevel, u8 *ofdmpowerlevel,
 			  u8 *bw20powerlevel, u8 *bw40powerlevel)
@@ -1050,58 +767,6 @@ void rtl88e_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel)
 					   &bw40powerlevel[0], channel);
 }
 
-static long _rtl88e_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
-					 enum wireless_mode wirelessmode,
-					 u8 txpwridx)
-{
-	long offset;
-	long pwrout_dbm;
-
-	switch (wirelessmode) {
-	case WIRELESS_MODE_B:
-		offset = -7;
-		break;
-	case WIRELESS_MODE_G:
-	case WIRELESS_MODE_N_24G:
-		offset = -8;
-		break;
-	default:
-		offset = -8;
-		break;
-	}
-	pwrout_dbm = txpwridx / 2 + offset;
-	return pwrout_dbm;
-}
-
-void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-	enum io_type iotype;
-
-	if (!is_hal_stop(rtlhal)) {
-		switch (operation) {
-		case SCAN_OPT_BACKUP_BAND0:
-			iotype = IO_CMD_PAUSE_BAND0_DM_BY_SCAN;
-			rtlpriv->cfg->ops->set_hw_reg(hw,
-						      HW_VAR_IO_CMD,
-						      (u8 *)&iotype);
-
-			break;
-		case SCAN_OPT_RESTORE:
-			iotype = IO_CMD_RESUME_DM_BY_SCAN;
-			rtlpriv->cfg->ops->set_hw_reg(hw,
-						      HW_VAR_IO_CMD,
-						      (u8 *)&iotype);
-			break;
-		default:
-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-				 "Unknown Scan Backup operation.\n");
-			break;
-		}
-	}
-}
-
 void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -1171,83 +836,27 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD, "\n");
 }
 
-void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
-			    enum nl80211_channel_type ch_type)
+static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+					     u32 cmdtableidx, u32 cmdtablesz,
+					     enum swchnlcmd_id cmdid,
+					     u32 para1, u32 para2, u32 msdelay)
 {
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-	u8 tmp_bw = rtlphy->current_chan_bw;
+	struct swchnlcmd *pcmd;
 
-	if (rtlphy->set_bwmode_inprogress)
-		return;
-	rtlphy->set_bwmode_inprogress = true;
-	if ((!is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
-		rtl88e_phy_set_bw_mode_callback(hw);
-	} else {
-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-			 "false driver sleep or unload\n");
-		rtlphy->set_bwmode_inprogress = false;
-		rtlphy->current_chan_bw = tmp_bw;
+	if (cmdtable == NULL) {
+		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
+		return false;
 	}
-}
 
-void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	u32 delay;
+	if (cmdtableidx >= cmdtablesz)
+		return false;
 
-	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
-		 "switch to channel%d\n", rtlphy->current_channel);
-	if (is_hal_stop(rtlhal))
-		return;
-	do {
-		if (!rtlphy->sw_chnl_inprogress)
-			break;
-		if (!_rtl88e_phy_sw_chnl_step_by_step
-		    (hw, rtlphy->current_channel, &rtlphy->sw_chnl_stage,
-		     &rtlphy->sw_chnl_step, &delay)) {
-			if (delay > 0)
-				mdelay(delay);
-			else
-				continue;
-		} else {
-			rtlphy->sw_chnl_inprogress = false;
-		}
-		break;
-	} while (true);
-	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
-}
-
-u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-
-	if (rtlphy->sw_chnl_inprogress)
-		return 0;
-	if (rtlphy->set_bwmode_inprogress)
-		return 0;
-	RT_ASSERT((rtlphy->current_channel <= 14),
-		  "WIRELESS_MODE_G but channel>14");
-	rtlphy->sw_chnl_inprogress = true;
-	rtlphy->sw_chnl_stage = 0;
-	rtlphy->sw_chnl_step = 0;
-	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
-		rtl88e_phy_sw_chnl_callback(hw);
-		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-			 "sw_chnl_inprogress false schdule workitem current channel %d\n",
-			 rtlphy->current_channel);
-		rtlphy->sw_chnl_inprogress = false;
-	} else {
-		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-			 "sw_chnl_inprogress false driver sleep or unload\n");
-		rtlphy->sw_chnl_inprogress = false;
-	}
-	return 1;
+	pcmd = cmdtable + cmdtableidx;
+	pcmd->cmdid = cmdid;
+	pcmd->para1 = para1;
+	pcmd->para2 = para2;
+	pcmd->msdelay = msdelay;
+	return true;
 }
 
 static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
@@ -1356,29 +965,6 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
 	(*delay) = currentcmd->msdelay;
 	(*step)++;
 	return false;
-}
-
-static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
-					     u32 cmdtableidx, u32 cmdtablesz,
-					     enum swchnlcmd_id cmdid,
-					     u32 para1, u32 para2, u32 msdelay)
-{
-	struct swchnlcmd *pcmd;
-
-	if (cmdtable == NULL) {
-		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-		return false;
-	}
-
-	if (cmdtableidx >= cmdtablesz)
-		return false;
-
-	pcmd = cmdtable + cmdtableidx;
-	pcmd->cmdid = cmdid;
-	pcmd->para1 = para1;
-	pcmd->para2 = para2;
-	pcmd->msdelay = msdelay;
-	return true;
 }
 
 static u8 _rtl88e_phy_path_a_iqk(struct ieee80211_hw *hw, bool config_pathb)
@@ -1903,7 +1489,7 @@ static void _rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
 	} else {
 		rtl_write_byte(rtlpriv, REG_TXPAUSE, 0x00);
 	}
-RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
 
 }
 
@@ -1952,196 +1538,6 @@ static void _rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw,
 				rtl_set_bbreg(hw, RCONFIG_RAM64x16, BIT(31), 1);
 		}
 	}
-}
-
-#undef IQK_ADDA_REG_NUM
-#undef IQK_DELAY_TIME
-
-void rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	long result[4][8];
-	u8 i, final_candidate;
-	bool b_patha_ok, b_pathb_ok;
-	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
-	    reg_ecc, reg_tmp = 0;
-	bool is12simular, is13simular, is23simular;
-	u32 iqk_bb_reg[9] = {
-		ROFDM0_XARXIQIMBALANCE,
-		ROFDM0_XBRXIQIMBALANCE,
-		ROFDM0_ECCATHRESHOLD,
-		ROFDM0_AGCRSSITABLE,
-		ROFDM0_XATXIQIMBALANCE,
-		ROFDM0_XBTXIQIMBALANCE,
-		ROFDM0_XCTXAFE,
-		ROFDM0_XDTXAFE,
-		ROFDM0_RXIQEXTANTA
-	};
-
-	if (b_recovery) {
-		_rtl88e_phy_reload_adda_registers(hw,
-						  iqk_bb_reg,
-						  rtlphy->iqk_bb_backup, 9);
-		return;
-	}
-
-	for (i = 0; i < 8; i++) {
-		result[0][i] = 0;
-		result[1][i] = 0;
-		result[2][i] = 0;
-		result[3][i] = 0;
-	}
-	final_candidate = 0xff;
-	b_patha_ok = false;
-	b_pathb_ok = false;
-	is12simular = false;
-	is23simular = false;
-	is13simular = false;
-	for (i = 0; i < 3; i++) {
-		if (get_rf_type(rtlphy) == RF_2T2R)
-			_rtl88e_phy_iq_calibrate(hw, result, i, true);
-		else
-			_rtl88e_phy_iq_calibrate(hw, result, i, false);
-		if (i == 1) {
-			is12simular =
-			  _rtl88e_phy_simularity_compare(hw, result, 0, 1);
-			if (is12simular) {
-				final_candidate = 0;
-				break;
-			}
-		}
-		if (i == 2) {
-			is13simular =
-			  _rtl88e_phy_simularity_compare(hw, result, 0, 2);
-			if (is13simular) {
-				final_candidate = 0;
-				break;
-			}
-			is23simular =
-			   _rtl88e_phy_simularity_compare(hw, result, 1, 2);
-			if (is23simular) {
-				final_candidate = 1;
-			} else {
-				for (i = 0; i < 8; i++)
-					reg_tmp += result[3][i];
-
-				if (reg_tmp != 0)
-					final_candidate = 3;
-				else
-					final_candidate = 0xFF;
-			}
-		}
-	}
-	for (i = 0; i < 4; i++) {
-		reg_e94 = result[i][0];
-		reg_e9c = result[i][1];
-		reg_ea4 = result[i][2];
-		reg_eac = result[i][3];
-		reg_eb4 = result[i][4];
-		reg_ebc = result[i][5];
-		reg_ec4 = result[i][6];
-		reg_ecc = result[i][7];
-	}
-	if (final_candidate != 0xff) {
-		reg_e94 = result[final_candidate][0];
-		reg_e9c = result[final_candidate][1];
-		reg_ea4 = result[final_candidate][2];
-		reg_eac = result[final_candidate][3];
-		reg_eb4 = result[final_candidate][4];
-		reg_ebc = result[final_candidate][5];
-		reg_ec4 = result[final_candidate][6];
-		reg_ecc = result[final_candidate][7];
-		rtlphy->reg_eb4 = reg_eb4;
-		rtlphy->reg_ebc = reg_ebc;
-		rtlphy->reg_e94 = reg_e94;
-		rtlphy->reg_e9c = reg_e9c;
-		b_patha_ok = true;
-		b_pathb_ok = true;
-	} else {
-		rtlphy->reg_e94 = 0x100;
-		rtlphy->reg_eb4 = 0x100;
-		rtlphy->reg_e9c = 0x0;
-		rtlphy->reg_ebc = 0x0;
-	}
-	if (reg_e94 != 0) /*&&(reg_ea4 != 0) */
-		_rtl88e_phy_path_a_fill_iqk_matrix(hw, b_patha_ok, result,
-						   final_candidate,
-						   (reg_ea4 == 0));
-	if (final_candidate != 0xFF) {
-		for (i = 0; i < IQK_MATRIX_REG_NUM; i++)
-			rtlphy->iqk_matrix[0].value[0][i] =
-				result[final_candidate][i];
-		rtlphy->iqk_matrix[0].iqk_done = true;
-
-	}
-	_rtl88e_phy_save_adda_registers(hw, iqk_bb_reg,
-					rtlphy->iqk_bb_backup, 9);
-}
-
-void rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	struct rtl_hal *rtlhal = &rtlpriv->rtlhal;
-	u32 timeout = 2000, timecount = 0;
-
-	while (rtlpriv->mac80211.act_scanning && timecount < timeout) {
-		udelay(50);
-		timecount += 50;
-	}
-
-	rtlphy->lck_inprogress = true;
-	RTPRINT(rtlpriv, FINIT, INIT_IQK,
-		"LCK:Start!!! currentband %x delay %d ms\n",
-		 rtlhal->current_bandtype, timecount);
-
-	_rtl88e_phy_lc_calibrate(hw, false);
-
-	rtlphy->lck_inprogress = false;
-}
-
-void rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain)
-{
-	_rtl88e_phy_set_rfpath_switch(hw, bmain, false);
-}
-
-bool rtl88e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
-	bool postprocessing = false;
-
-	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
-		 "-->IO Cmd(%#x), set_io_inprogress(%d)\n",
-		  iotype, rtlphy->set_io_inprogress);
-	do {
-		switch (iotype) {
-		case IO_CMD_RESUME_DM_BY_SCAN:
-			RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
-				 "[IO CMD] Resume DM after scan.\n");
-			postprocessing = true;
-			break;
-		case IO_CMD_PAUSE_BAND0_DM_BY_SCAN:
-			RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
-				 "[IO CMD] Pause DM before scan.\n");
-			postprocessing = true;
-			break;
-		default:
-			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
-				 "switch case not process\n");
-			break;
-		}
-	} while (false);
-	if (postprocessing && !rtlphy->set_io_inprogress) {
-		rtlphy->set_io_inprogress = true;
-		rtlphy->current_io_type = iotype;
-	} else {
-		return false;
-	}
-	rtl88e_phy_set_io(hw);
-	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE, "IO Type(%#x)\n", iotype);
-	return true;
 }
 
 static void rtl88e_phy_set_io(struct ieee80211_hw *hw)
@@ -2329,6 +1725,40 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
 	return bresult;
 }
 
+static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+	bool rtstatus;
+
+	rtstatus = phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_PHY_REG);
+	if (!rtstatus) {
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!");
+		return false;
+	}
+
+	if (!rtlefuse->autoload_failflag) {
+		rtlphy->pwrgroup_cnt = 0;
+		rtstatus =
+		  phy_config_bb_with_pghdr(hw, BASEBAND_CONFIG_PHY_REG);
+	}
+	if (!rtstatus) {
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!");
+		return false;
+	}
+	rtstatus =
+	  phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
+	if (!rtstatus) {
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
+		return false;
+	}
+	rtlphy->cck_high_power =
+	  (bool)(rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, 0x200));
+
+	return true;
+}
+
 bool rtl88e_phy_set_rf_power_state(struct ieee80211_hw *hw,
 				   enum rf_pwrstate rfpwr_state)
 {
@@ -2341,3 +1771,549 @@ bool rtl88e_phy_set_rf_power_state(struct ieee80211_hw *hw,
 	bresult = _rtl88ee_phy_set_rf_power_state(hw, rfpwr_state);
 	return bresult;
 }
+
+void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	u32 delay;
+
+	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
+		 "switch to channel%d\n", rtlphy->current_channel);
+	if (is_hal_stop(rtlhal))
+		return;
+	do {
+		if (!rtlphy->sw_chnl_inprogress)
+			break;
+		if (!_rtl88e_phy_sw_chnl_step_by_step
+		    (hw, rtlphy->current_channel, &rtlphy->sw_chnl_stage,
+		     &rtlphy->sw_chnl_step, &delay)) {
+			if (delay > 0)
+				mdelay(delay);
+			else
+				continue;
+		} else {
+			rtlphy->sw_chnl_inprogress = false;
+		}
+		break;
+	} while (true);
+	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
+}
+
+u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+
+	if (rtlphy->sw_chnl_inprogress)
+		return 0;
+	if (rtlphy->set_bwmode_inprogress)
+		return 0;
+	RT_ASSERT((rtlphy->current_channel <= 14),
+		  "WIRELESS_MODE_G but channel>14");
+	rtlphy->sw_chnl_inprogress = true;
+	rtlphy->sw_chnl_stage = 0;
+	rtlphy->sw_chnl_step = 0;
+	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
+		rtl88e_phy_sw_chnl_callback(hw);
+		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
+			 "sw_chnl_inprogress false schdule workitem current channel %d\n",
+			 rtlphy->current_channel);
+		rtlphy->sw_chnl_inprogress = false;
+	} else {
+		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
+			 "sw_chnl_inprogress false driver sleep or unload\n");
+		rtlphy->sw_chnl_inprogress = false;
+	}
+	return 1;
+}
+
+bool rtl88e_phy_rf_config(struct ieee80211_hw *hw)
+{
+	return rtl88e_phy_rf6052_config(hw);
+}
+
+u32 rtl88e_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitmask)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	u32 returnvalue, originalvalue, bitshift;
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), bitmask(%#x)\n", regaddr, bitmask);
+	originalvalue = rtl_read_dword(rtlpriv, regaddr);
+	bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
+	returnvalue = (originalvalue & bitmask) >> bitshift;
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "BBR MASK=0x%x Addr[0x%x]=0x%x\n", bitmask,
+		 regaddr, originalvalue);
+
+	return returnvalue;
+
+}
+
+void rtl88e_phy_set_bb_reg(struct ieee80211_hw *hw,
+			   u32 regaddr, u32 bitmask, u32 data)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	u32 originalvalue, bitshift;
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
+		 regaddr, bitmask, data);
+
+	if (bitmask != MASKDWORD) {
+		originalvalue = rtl_read_dword(rtlpriv, regaddr);
+		bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
+		data = ((originalvalue & (~bitmask)) | (data << bitshift));
+	}
+
+	rtl_write_dword(rtlpriv, regaddr, data);
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
+		 regaddr, bitmask, data);
+}
+
+u32 rtl88e_phy_query_rf_reg(struct ieee80211_hw *hw,
+			    enum radio_path rfpath, u32 regaddr, u32 bitmask)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	u32 original_value, readback_value, bitshift;
+	unsigned long flags;
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), rfpath(%#x), bitmask(%#x)\n",
+		 regaddr, rfpath, bitmask);
+
+	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
+
+
+	original_value = _rtl88e_phy_rf_serial_read(hw, rfpath, regaddr);
+	bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
+	readback_value = (original_value & bitmask) >> bitshift;
+
+	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
+		  regaddr, rfpath, bitmask, original_value);
+	return readback_value;
+}
+
+void rtl88e_phy_set_rf_reg(struct ieee80211_hw *hw,
+			   enum radio_path rfpath,
+			   u32 regaddr, u32 bitmask, u32 data)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	u32 original_value, bitshift;
+	unsigned long flags;
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
+		  regaddr, bitmask, data, rfpath);
+
+	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
+
+	if (bitmask != RFREG_OFFSET_MASK) {
+			original_value = _rtl88e_phy_rf_serial_read(hw,
+								    rfpath,
+								    regaddr);
+			bitshift = _rtl88e_phy_calculate_bit_shift(bitmask);
+			data =
+			    ((original_value & (~bitmask)) |
+			     (data << bitshift));
+		}
+
+	_rtl88e_phy_rf_serial_write(hw, rfpath, regaddr, data);
+
+
+	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
+
+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
+		 "regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
+		 regaddr, bitmask, data, rfpath);
+}
+
+bool rtl88e_phy_mac_config(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	bool rtstatus = _rtl88e_phy_config_mac_with_headerfile(hw);
+
+	rtl_write_byte(rtlpriv, 0x04CA, 0x0B);
+	return rtstatus;
+}
+
+bool rtl88e_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+					  enum radio_path rfpath)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	bool rtstatus = true;
+	u32 *radioa_array_table;
+	u16 radioa_arraylen;
+
+	radioa_arraylen = RTL8188EE_RADIOA_1TARRAYLEN;
+	radioa_array_table = RTL8188EE_RADIOA_1TARRAY;
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+		 "Radio_A:RTL8188EE_RADIOA_1TARRAY %d\n", radioa_arraylen);
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
+	rtstatus = true;
+	switch (rfpath) {
+	case RF90_PATH_A:
+		process_path_a(hw, radioa_arraylen, radioa_array_table);
+		break;
+	case RF90_PATH_B:
+	case RF90_PATH_C:
+	case RF90_PATH_D:
+		break;
+	}
+	return true;
+}
+
+void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
+			    enum nl80211_channel_type ch_type)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+	u8 tmp_bw = rtlphy->current_chan_bw;
+
+	if (rtlphy->set_bwmode_inprogress)
+		return;
+	rtlphy->set_bwmode_inprogress = true;
+	if ((!is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
+		rtl88e_phy_set_bw_mode_callback(hw);
+	} else {
+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+			 "false driver sleep or unload\n");
+		rtlphy->set_bwmode_inprogress = false;
+		rtlphy->current_chan_bw = tmp_bw;
+	}
+}
+
+void rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_hal *rtlhal = &rtlpriv->rtlhal;
+	u32 timeout = 2000, timecount = 0;
+
+	while (rtlpriv->mac80211.act_scanning && timecount < timeout) {
+		udelay(50);
+		timecount += 50;
+	}
+
+	rtlphy->lck_inprogress = true;
+	RTPRINT(rtlpriv, FINIT, INIT_IQK,
+		"LCK:Start!!! currentband %x delay %d ms\n",
+		 rtlhal->current_bandtype, timecount);
+
+	_rtl88e_phy_lc_calibrate(hw, false);
+
+	rtlphy->lck_inprogress = false;
+}
+
+void rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	long result[4][8];
+	u8 i, final_candidate;
+	bool b_patha_ok, b_pathb_ok;
+	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
+	    reg_ecc, reg_tmp = 0;
+	bool is12simular, is13simular, is23simular;
+	u32 iqk_bb_reg[9] = {
+		ROFDM0_XARXIQIMBALANCE,
+		ROFDM0_XBRXIQIMBALANCE,
+		ROFDM0_ECCATHRESHOLD,
+		ROFDM0_AGCRSSITABLE,
+		ROFDM0_XATXIQIMBALANCE,
+		ROFDM0_XBTXIQIMBALANCE,
+		ROFDM0_XCTXAFE,
+		ROFDM0_XDTXAFE,
+		ROFDM0_RXIQEXTANTA
+	};
+
+	if (b_recovery) {
+		_rtl88e_phy_reload_adda_registers(hw,
+						  iqk_bb_reg,
+						  rtlphy->iqk_bb_backup, 9);
+		return;
+	}
+
+	for (i = 0; i < 8; i++) {
+		result[0][i] = 0;
+		result[1][i] = 0;
+		result[2][i] = 0;
+		result[3][i] = 0;
+	}
+	final_candidate = 0xff;
+	b_patha_ok = false;
+	b_pathb_ok = false;
+	is12simular = false;
+	is23simular = false;
+	is13simular = false;
+	for (i = 0; i < 3; i++) {
+		if (get_rf_type(rtlphy) == RF_2T2R)
+			_rtl88e_phy_iq_calibrate(hw, result, i, true);
+		else
+			_rtl88e_phy_iq_calibrate(hw, result, i, false);
+		if (i == 1) {
+			is12simular =
+			  _rtl88e_phy_simularity_compare(hw, result, 0, 1);
+			if (is12simular) {
+				final_candidate = 0;
+				break;
+			}
+		}
+		if (i == 2) {
+			is13simular =
+			  _rtl88e_phy_simularity_compare(hw, result, 0, 2);
+			if (is13simular) {
+				final_candidate = 0;
+				break;
+			}
+			is23simular =
+			   _rtl88e_phy_simularity_compare(hw, result, 1, 2);
+			if (is23simular) {
+				final_candidate = 1;
+			} else {
+				for (i = 0; i < 8; i++)
+					reg_tmp += result[3][i];
+
+				if (reg_tmp != 0)
+					final_candidate = 3;
+				else
+					final_candidate = 0xFF;
+			}
+		}
+	}
+	for (i = 0; i < 4; i++) {
+		reg_e94 = result[i][0];
+		reg_e9c = result[i][1];
+		reg_ea4 = result[i][2];
+		reg_eac = result[i][3];
+		reg_eb4 = result[i][4];
+		reg_ebc = result[i][5];
+		reg_ec4 = result[i][6];
+		reg_ecc = result[i][7];
+	}
+	if (final_candidate != 0xff) {
+		reg_e94 = result[final_candidate][0];
+		reg_e9c = result[final_candidate][1];
+		reg_ea4 = result[final_candidate][2];
+		reg_eac = result[final_candidate][3];
+		reg_eb4 = result[final_candidate][4];
+		reg_ebc = result[final_candidate][5];
+		reg_ec4 = result[final_candidate][6];
+		reg_ecc = result[final_candidate][7];
+		rtlphy->reg_eb4 = reg_eb4;
+		rtlphy->reg_ebc = reg_ebc;
+		rtlphy->reg_e94 = reg_e94;
+		rtlphy->reg_e9c = reg_e9c;
+		b_patha_ok = true;
+		b_pathb_ok = true;
+	} else {
+		rtlphy->reg_e94 = 0x100;
+		rtlphy->reg_eb4 = 0x100;
+		rtlphy->reg_e9c = 0x0;
+		rtlphy->reg_ebc = 0x0;
+	}
+	if (reg_e94 != 0) /*&&(reg_ea4 != 0) */
+		_rtl88e_phy_path_a_fill_iqk_matrix(hw, b_patha_ok, result,
+						   final_candidate,
+						   (reg_ea4 == 0));
+	if (final_candidate != 0xFF) {
+		for (i = 0; i < IQK_MATRIX_REG_NUM; i++)
+			rtlphy->iqk_matrix[0].value[0][i] =
+				result[final_candidate][i];
+		rtlphy->iqk_matrix[0].iqk_done = true;
+
+	}
+	_rtl88e_phy_save_adda_registers(hw, iqk_bb_reg,
+					rtlphy->iqk_bb_backup, 9);
+}
+
+void rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain)
+{
+	_rtl88e_phy_set_rfpath_switch(hw, bmain, false);
+}
+
+bool rtl88e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	bool postprocessing = false;
+
+	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
+		 "-->IO Cmd(%#x), set_io_inprogress(%d)\n",
+		  iotype, rtlphy->set_io_inprogress);
+	do {
+		switch (iotype) {
+		case IO_CMD_RESUME_DM_BY_SCAN:
+			RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
+				 "[IO CMD] Resume DM after scan.\n");
+			postprocessing = true;
+			break;
+		case IO_CMD_PAUSE_BAND0_DM_BY_SCAN:
+			RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
+				 "[IO CMD] Pause DM before scan.\n");
+			postprocessing = true;
+			break;
+		default:
+			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+				 "switch case not process\n");
+			break;
+		}
+	} while (false);
+	if (postprocessing && !rtlphy->set_io_inprogress) {
+		rtlphy->set_io_inprogress = true;
+		rtlphy->current_io_type = iotype;
+	} else {
+		return false;
+	}
+	rtl88e_phy_set_io(hw);
+	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE, "IO Type(%#x)\n", iotype);
+	return true;
+}
+
+bool rtl88e_phy_bb_config(struct ieee80211_hw *hw)
+{
+	bool rtstatus = true;
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	u16 regval;
+	u8 b_reg_hwparafile = 1;
+	u32 tmp;
+	_rtl88e_phy_init_bb_rf_register_definition(hw);
+	regval = rtl_read_word(rtlpriv, REG_SYS_FUNC_EN);
+	rtl_write_word(rtlpriv, REG_SYS_FUNC_EN,
+		       regval | BIT(13) | BIT(0) | BIT(1));
+
+	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
+	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN,
+		       FEN_USBA | FEN_USBD | FEN_BB_GLB_RSTN | FEN_BBRSTB);
+	tmp = rtl_read_dword(rtlpriv, 0x4c);
+	rtl_write_dword(rtlpriv, 0x4c, tmp | BIT(23));
+	if (b_reg_hwparafile == 1)
+		rtstatus = _rtl88e_phy_bb8188e_config_parafile(hw);
+	return rtstatus;
+}
+
+#if 0
+void rtl88e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+
+	rtlphy->default_initialgain[0] =
+	    (u8)rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, MASKBYTE0);
+	rtlphy->default_initialgain[1] =
+	    (u8)rtl_get_bbreg(hw, ROFDM0_XBAGCCORE1, MASKBYTE0);
+	rtlphy->default_initialgain[2] =
+	    (u8)rtl_get_bbreg(hw, ROFDM0_XCAGCCORE1, MASKBYTE0);
+	rtlphy->default_initialgain[3] =
+	    (u8)rtl_get_bbreg(hw, ROFDM0_XDAGCCORE1, MASKBYTE0);
+
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+		 "Default initial gain (c50=0x%x, c58=0x%x, c60=0x%x, c68=0x%x\n",
+		 rtlphy->default_initialgain[0],
+		 rtlphy->default_initialgain[1],
+		 rtlphy->default_initialgain[2],
+		 rtlphy->default_initialgain[3]);
+
+	rtlphy->framesync = (u8)rtl_get_bbreg(hw, ROFDM0_RXDETECTOR3,
+					      MASKBYTE0);
+	rtlphy->framesync_c34 = rtl_get_bbreg(hw, ROFDM0_RXDETECTOR2,
+					      MASKDWORD);
+
+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+		 "Default framesync (0x%x) = 0x%x\n",
+		 ROFDM0_RXDETECTOR3, rtlphy->framesync);
+}
+
+static long _rtl88e_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
+					 enum wireless_mode wirelessmode,
+					 u8 txpwridx)
+{
+	long offset;
+	long pwrout_dbm;
+
+	switch (wirelessmode) {
+	case WIRELESS_MODE_B:
+		offset = -7;
+		break;
+	case WIRELESS_MODE_G:
+	case WIRELESS_MODE_N_24G:
+		offset = -8;
+		break;
+	default:
+		offset = -8;
+		break;
+	}
+	pwrout_dbm = txpwridx / 2 + offset;
+	return pwrout_dbm;
+}
+
+void rtl88e_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	u8 txpwr_level;
+	long txpwr_dbm;
+
+	txpwr_level = rtlphy->cur_cck_txpwridx;
+	txpwr_dbm = _rtl88e_phy_txpwr_idx_to_dbm(hw,
+						 WIRELESS_MODE_B, txpwr_level);
+	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
+	if (_rtl88e_phy_txpwr_idx_to_dbm(hw,
+					 WIRELESS_MODE_G,
+					 txpwr_level) > txpwr_dbm)
+		txpwr_dbm =
+		    _rtl88e_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G,
+						 txpwr_level);
+	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
+	if (_rtl88e_phy_txpwr_idx_to_dbm(hw,
+					 WIRELESS_MODE_N_24G,
+					 txpwr_level) > txpwr_dbm)
+		txpwr_dbm =
+		    _rtl88e_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
+						 txpwr_level);
+	*powerlevel = txpwr_dbm;
+}
+
+void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+	enum io_type iotype;
+
+	if (!is_hal_stop(rtlhal)) {
+		switch (operation) {
+		case SCAN_OPT_BACKUP_BAND0:
+			iotype = IO_CMD_PAUSE_BAND0_DM_BY_SCAN;
+			rtlpriv->cfg->ops->set_hw_reg(hw,
+						      HW_VAR_IO_CMD,
+						      (u8 *)&iotype);
+
+			break;
+		case SCAN_OPT_RESTORE:
+			iotype = IO_CMD_RESUME_DM_BY_SCAN;
+			rtlpriv->cfg->ops->set_hw_reg(hw,
+						      HW_VAR_IO_CMD,
+						      (u8 *)&iotype);
+			break;
+		default:
+			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+				 "Unknown Scan Backup operation.\n");
+			break;
+		}
+	}
+}
+
+
+#endif
+
+

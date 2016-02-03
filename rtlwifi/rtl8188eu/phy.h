@@ -19,12 +19,13 @@
  * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
  * Hsinchu 300, Taiwan.
  *
+ * Taehee Yoo	<ap420073@gmail.com
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
 
-#ifndef __RTL92C_PHY_H__
-#define __RTL92C_PHY_H__
+#ifndef __RTL88EU_PHY_H__
+#define __RTL88EU_PHY_H__
 
 /* MAX_TX_COUNT must always set to 4, otherwise read efuse
  * table secquence will be wrong.

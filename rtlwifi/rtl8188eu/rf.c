@@ -30,8 +30,6 @@
 #include "rf.h"
 #include "dm.h"
 
-static bool _rtl88e_phy_rf6052_config_parafile(struct ieee80211_hw *hw);
-
 void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -417,19 +415,6 @@ void rtl88e_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
 	}
 }
 
-bool rtl88e_phy_rf6052_config(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-
-	if (rtlphy->rf_type == RF_1T1R)
-		rtlphy->num_total_rfpath = 1;
-	else
-		rtlphy->num_total_rfpath = 2;
-
-	return _rtl88e_phy_rf6052_config_parafile(hw);
-}
-
 static bool _rtl88e_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
@@ -507,3 +492,17 @@ static bool _rtl88e_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "\n");
 	return rtstatus;
 }
+
+bool rtl88e_phy_rf6052_config(struct ieee80211_hw *hw)
+{
+	struct rtl_priv *rtlpriv = rtl_priv(hw);
+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+
+	if (rtlphy->rf_type == RF_1T1R)
+		rtlphy->num_total_rfpath = 1;
+	else
+		rtlphy->num_total_rfpath = 2;
+
+	return _rtl88e_phy_rf6052_config_parafile(hw);
+}
+
