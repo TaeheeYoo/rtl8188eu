@@ -42,11 +42,6 @@ inline u32 rtl_systime_to_ms(u32 systime)
 	return systime * 1000 / HZ;
 }
 
-inline u32 rtl_ms_to_systime(u32 ms)
-{
-	return ms * HZ / 1000;
-}
-
 inline s32 rtl_get_passing_time_ms(u32 start)
 {
 	return rtl_systime_to_ms(jiffies-start);
@@ -1596,7 +1591,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	}
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 		 "Download Firmware Success!!\n");
-#if 1
+#if 0
 	rtlhal->fw_ready = false;
 #else
 	rtlhal->fw_ready = true;
