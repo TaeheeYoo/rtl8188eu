@@ -138,11 +138,7 @@ static struct rtl_hal_ops rtl8188eu_hal_ops = {
 	.get_hw_reg = rtl88eu_get_hw_reg,
 	.set_hw_reg = rtl88eu_set_hw_reg,
 	.update_rate_tbl = rtl88eu_update_hal_rate_tbl,
-#if 1
 	.fill_tx_desc = rtl88eu_tx_fill_desc,
-#else
-	.fill_tx_desc = rtl92cu_tx_fill_desc,
-#endif
 	.fill_tx_cmddesc = rtl88eu_tx_fill_cmddesc,
 	.query_rx_desc = rtl88eu_rx_query_desc,
 	.set_channel_access = rtl88eu_update_channel_access_setting,

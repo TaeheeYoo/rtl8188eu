@@ -706,13 +706,4 @@ void rtl8188eu_rx_segregate_hdl(
 	struct ieee80211_hw *hw,
 	struct sk_buff *skb,
 	struct sk_buff_head *skb_list);
-void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
-			  struct ieee80211_hdr *hdr, u8 *pdesc_tx,
-			  u8 *pbd_desc_tx, struct ieee80211_tx_info *info,
-			  struct ieee80211_sta *sta,
-			  struct sk_buff *skb,
-			  u8 queue_index,
-			  struct rtl_tcb_desc *tcb_desc);
-
-
 #endif
