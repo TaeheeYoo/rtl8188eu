@@ -272,7 +272,7 @@ static void dm_tx_pwr_track_set_pwr(struct ieee80211_hw *hw,
 				    u8 rfpath, u8 channel_mapped_index)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_dm *rtldm = rtl_dm(rtl_priv(hw));
 
 	if (method == TXAGC) {
@@ -632,7 +632,7 @@ static void rtl88e_dm_init_dynamic_txpower(struct ieee80211_hw *hw)
 static void rtl92c_dm_dynamic_txpower(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 	long undec_sm_pwdb;
 

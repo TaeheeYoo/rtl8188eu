@@ -33,7 +33,7 @@
 void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 
 	switch (bandwidth) {
 	case HT_CHANNEL_WIDTH_20:
@@ -59,7 +59,7 @@ void rtl88e_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
 				       u8 *ppowerlevel)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
 	u32 tx_agc[2] = {0, 0}, tmpval;
@@ -161,7 +161,7 @@ static void _rtl88e_phy_get_power_base(struct ieee80211_hw *hw,
 				      u32 *ofdmbase, u32 *mcsbase)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	u32 powerbase0, powerbase1;
 	u8 i, powerlevel[2];
 
@@ -201,7 +201,7 @@ static void _rtl88e_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
 						       u32 *p_outwriteval)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
 	u8 i, chnlgroup = 0, pwr_diff_limit[4], pwr_diff = 0, customer_pwr_diff;
 	u32 writeval, customer_limit, rf;
@@ -418,7 +418,7 @@ void rtl88e_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
 static bool _rtl88e_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	u32 u4_regvalue = 0;
 	u8 rfpath;
 	bool rtstatus = true;
@@ -496,7 +496,7 @@ static bool _rtl88e_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
 bool rtl88e_phy_rf6052_config(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 
 	if (rtlphy->rf_type == RF_1T1R)
 		rtlphy->num_total_rfpath = 1;

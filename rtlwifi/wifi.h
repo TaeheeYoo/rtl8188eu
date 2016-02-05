@@ -2647,6 +2647,7 @@ struct rtl_priv {
 
 #define rtl_priv(hw)		(((struct rtl_priv *)(hw)->priv))
 #define rtl_mac(rtlpriv)	(&((rtlpriv)->mac80211))
+#define rtl_phy(rtlpriv)	(&((rtlpriv)->phy))
 #define rtl_hal(rtlpriv)	(&((rtlpriv)->rtlhal))
 #define rtl_efuse(rtlpriv)	(&((rtlpriv)->efuse))
 #define rtl_psc(rtlpriv)	(&((rtlpriv)->psc))

@@ -49,7 +49,7 @@ static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
 				      enum radio_path rfpath, u32 offset)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
 	u32 newoffset;
 	u32 tmplong, tmplong2;
@@ -99,7 +99,7 @@ static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
 	u32 data_and_addr;
 	u32 newoffset;
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
 
 	if (RT_CANNOT_IO(hw)) {
@@ -135,7 +135,7 @@ static bool _rtl88e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
 static void _rtl88e_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 
 	rtlphy->phyreg_def[RF90_PATH_A].rfintfs = RFPGA0_XAB_RFINTERFACESW;
 	rtlphy->phyreg_def[RF90_PATH_B].rfintfs = RFPGA0_XAB_RFINTERFACESW;
@@ -427,7 +427,7 @@ static void store_pwrindex_rate_offset(struct ieee80211_hw *hw,
 				       u32 data)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	int count = rtlphy->pwrgroup_cnt;
 
 	if (regaddr == RTXAGC_A_RATE18_06) {
@@ -736,7 +736,7 @@ static void _rtl88e_ccxpower_index_check(struct ieee80211_hw *hw,
 					 u8 *bw40powerlevel)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 
 	rtlphy->cur_cck_txpwridx = cckpowerlevel[0];
 	rtlphy->cur_ofdm24g_txpwridx = ofdmpowerlevel[0];
@@ -771,7 +771,7 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
 	u8 reg_bw_opmode;
 	u8 reg_prsr_rsc;
@@ -864,7 +864,7 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
 					     u32 *delay)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct swchnlcmd precommoncmd[MAX_PRECMD_CNT];
 	u32 precommoncmdcnt;
 	struct swchnlcmd postcommoncmd[MAX_POSTCMD_CNT];
@@ -1301,7 +1301,7 @@ static void _rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw,
 				     long result[][8], u8 t, bool is2t)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	u32 i;
 	u8 patha_ok, pathb_ok;
 	u32 adda_reg[IQK_ADDA_REG_NUM] = {
@@ -1543,7 +1543,7 @@ static void _rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw,
 static void rtl88e_phy_set_io(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
 
 	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
@@ -1728,7 +1728,7 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
 static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
 	bool rtstatus;
 
@@ -1776,7 +1776,7 @@ void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	u32 delay;
 
 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
@@ -1804,7 +1804,7 @@ void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
 u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
 
 	if (rtlphy->sw_chnl_inprogress)
@@ -1976,7 +1976,7 @@ void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
 			    enum nl80211_channel_type ch_type)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
 	u8 tmp_bw = rtlphy->current_chan_bw;
 
@@ -1996,7 +1996,7 @@ void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
 void rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	struct rtl_hal *rtlhal = &rtlpriv->rtlhal;
 	u32 timeout = 2000, timecount = 0;
 
@@ -2018,7 +2018,7 @@ void rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
 void rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	long result[4][8];
 	u8 i, final_candidate;
 	bool b_patha_ok, b_pathb_ok;
@@ -2145,7 +2145,7 @@ void rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain)
 bool rtl88e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	bool postprocessing = false;
 
 	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
@@ -2206,7 +2206,7 @@ bool rtl88e_phy_bb_config(struct ieee80211_hw *hw)
 void rtl88e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 
 	rtlphy->default_initialgain[0] =
 	    (u8)rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, MASKBYTE0);
@@ -2260,7 +2260,7 @@ static long _rtl88e_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
 void rtl88e_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
 {
 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_phy *rtlphy = &rtlpriv->phy;
+	struct rtl_phy *rtlphy = rtl_phy(rtlpriv);
 	u8 txpwr_level;
 	long txpwr_dbm;
 
