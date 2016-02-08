@@ -123,10 +123,10 @@ static bool _rtl88e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
 	u32 *ptrarray;
 
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl8188EMACPHY_Array\n");
-	arraylength = RTL8188EEMAC_1T_ARRAYLEN;
-	ptrarray = RTL8188EEMAC_1T_ARRAY;
+	arraylength = RTL8188EUMAC_1T_ARRAYLEN;
+	ptrarray = RTL8188EUMAC_1T_ARRAY;
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-		 "Img:RTL8188EEMAC_1T_ARRAY LEN %d\n", arraylength);
+		 "Img:RTL8188EUMAC_1T_ARRAY LEN %d\n", arraylength);
 	for (i = 0; i < arraylength; i = i + 2)
 		rtl_write_byte(rtlpriv, ptrarray[i], (u8)ptrarray[i + 1]);
 	return true;
@@ -377,12 +377,12 @@ static bool phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
 	u16 arraylen;
 
 	if (configtype == BASEBAND_CONFIG_PHY_REG) {
-		arraylen = RTL8188EEPHY_REG_1TARRAYLEN;
-		array_table = RTL8188EEPHY_REG_1TARRAY;
+		arraylen = RTL8188EUPHY_REG_1TARRAYLEN;
+		array_table = RTL8188EUPHY_REG_1TARRAY;
 		handle_branch1(hw, arraylen, array_table);
 	} else if (configtype == BASEBAND_CONFIG_AGC_TAB) {
-		arraylen = RTL8188EEAGCTAB_1TARRAYLEN;
-		array_table = RTL8188EEAGCTAB_1TARRAY;
+		arraylen = RTL8188EUAGCTAB_1TARRAYLEN;
+		array_table = RTL8188EUAGCTAB_1TARRAY;
 		handle_branch2(hw, arraylen, array_table);
 	}
 	return true;
@@ -560,8 +560,8 @@ static bool phy_config_bb_with_pghdr(struct ieee80211_hw *hw, u8 configtype)
 	u16 phy_reg_page_len;
 	u32 v1 = 0, v2 = 0, v3 = 0;
 
-	phy_reg_page_len = RTL8188EEPHY_REG_ARRAY_PGLEN;
-	phy_reg_page = RTL8188EEPHY_REG_ARRAY_PG;
+	phy_reg_page_len = RTL8188EUPHY_REG_ARRAY_PGLEN;
+	phy_reg_page = RTL8188EUPHY_REG_ARRAY_PG;
 
 	if (configtype == BASEBAND_CONFIG_PHY_REG) {
 		for (i = 0; i < phy_reg_page_len; i = i + 3) {
@@ -1954,10 +1954,10 @@ bool rtl88e_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
 	u32 *radioa_array_table;
 	u16 radioa_arraylen;
 
-	radioa_arraylen = RTL8188EE_RADIOA_1TARRAYLEN;
-	radioa_array_table = RTL8188EE_RADIOA_1TARRAY;
+	radioa_arraylen = RTL8188EU_RADIOA_1TARRAYLEN;
+	radioa_array_table = RTL8188EU_RADIOA_1TARRAY;
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-		 "Radio_A:RTL8188EE_RADIOA_1TARRAY %d\n", radioa_arraylen);
+		 "Radio_A:RTL8188EU_RADIOA_1TARRAY %d\n", radioa_arraylen);
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
 	rtstatus = true;
 	switch (rfpath) {
