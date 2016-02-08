@@ -412,7 +412,7 @@ static void _rtl88eu_read_txpower_info(struct ieee80211_hw *hw, u8 *hwinfo)
 
 	_rtl88eu_read_pwrvalue_from_prom(hw, &pwrinfo24g, hwinfo);
 
-	/* TODO !!!!!!!!!!!!!!!!!*/
+	/* TODO */
 #if 0
 	for (rfpath = 0; rfpath < 2; rfpath++) {
 		for (ch = 0; ch < 14; ch++) {
@@ -1574,7 +1574,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 #endif
 
 	local_save_flags(flags);
-	local_irq_enable();
+	local_irq_disable();
 	rtlhal->fw_ready = false;
 	rtlhal->hw_type = HARDWARE_TYPE_RTL8188EU;
 	status = _rtl88eu_init_mac(hw);
@@ -1586,11 +1586,12 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	if (status) {
 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 			 "Download Firmware failed!!\n");
-		status = 1;
+		status = true;
 		return status;
 	}
 	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 		 "Download Firmware Success!!\n");
+	local_irq_enable();
 #if 0
 	rtlhal->fw_ready = false;
 #else
@@ -1624,7 +1625,7 @@ int rtl88eu_hw_init(struct ieee80211_hw *hw)
 	rtl_write_byte(rtlpriv, REG_CR, value16);
 
 	value8 = rtl_read_byte(rtlpriv, REG_TX_RPT_CTRL);
-	rtl_write_byte(rtlpriv,  REG_TX_RPT_CTRL, (value8|BIT(1)|BIT(0)));
+	rtl_write_byte(rtlpriv,  REG_TX_RPT_CTRL, (value8 | BIT(1) | BIT(0)));
 	rtl_write_byte(rtlpriv,  REG_TX_RPT_CTRL+1, 2);
 	rtl_write_word(rtlpriv, REG_TX_RPT_TIME, 0xCdf0);
 	rtl_write_byte(rtlpriv, REG_EARLY_MODE_CONTROL, 0);
@@ -1831,8 +1832,7 @@ void rtl88eu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
 		enum rf_pwrstate rfstate;
 		u32 val_rcr;
 
-		rtlpriv->cfg->ops->get_hw_reg(hw,
-					      HW_VAR_RF_STATE,
+		rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RF_STATE,
 					      (u8 *)(&rfstate));
 		if (rfstate == ERFOFF) {
 			*((bool *)(val)) = true;

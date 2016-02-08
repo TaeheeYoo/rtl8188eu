@@ -239,9 +239,24 @@ static void _usb_writeN_sync(struct rtl_priv *rtlpriv, u32 addr, void *data,
 	if (!buffer)
 		return;
 	usb_control_msg(udev, pipe, request, reqtype, wvalue,
-			index, buffer, len, 50);
+			index, buffer, len, 500);
 
 	kfree(buffer);
+}
+
+static void _usb_write8_sync(struct rtl_priv *rtlpriv, u32 addr, u8 val)
+{
+	_usb_writeN_sync(rtlpriv, addr, (void *)&val, 1);
+}
+
+static void _usb_write16_sync(struct rtl_priv *rtlpriv, u32 addr, u16 val)
+{
+	_usb_writeN_sync(rtlpriv, addr, (void *)&val, 2);
+}
+
+static void _usb_write32_sync(struct rtl_priv *rtlpriv, u32 addr, u32 val)
+{
+	_usb_writeN_sync(rtlpriv, addr, (void *)&val, 4);
 }
 
 static void _rtl_usb_io_handler_init(struct device *dev,
@@ -254,10 +269,15 @@ static void _rtl_usb_io_handler_init(struct device *dev,
 	rtlpriv->io.write8_async	= _usb_write8_async;
 	rtlpriv->io.write16_async	= _usb_write16_async;
 	rtlpriv->io.write32_async	= _usb_write32_async;
+
+	rtlpriv->io.writeN_sync		= _usb_writeN_sync;
+	rtlpriv->io.write8_sync		= _usb_write8_sync;
+	rtlpriv->io.write16_sync	= _usb_write16_sync;
+	rtlpriv->io.write32_sync	= _usb_write32_sync;
+
 	rtlpriv->io.read8_sync		= _usb_read8_sync;
 	rtlpriv->io.read16_sync		= _usb_read16_sync;
 	rtlpriv->io.read32_sync		= _usb_read32_sync;
-	rtlpriv->io.writeN_sync		= _usb_writeN_sync;
 }
 
 static void _rtl_usb_io_handler_release(struct ieee80211_hw *hw)
@@ -442,7 +462,6 @@ static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
 	usb_fill_bulk_urb(urb, rtlusb->udev,
 			  usb_rcvbulkpipe(rtlusb->udev, rtlusb->in_ep),
 			  buf, rtlusb->rx_max_size, _rtl_rx_completed, rtlusb);
-	urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 	return 0;
 }
 
@@ -930,7 +949,6 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
 	_rtl_install_trx_info(rtlusb, skb, ep_num);
 	usb_fill_bulk_urb(_urb, rtlusb->udev, usb_sndbulkpipe(rtlusb->udev,
 			  ep_num), skb->data, skb->len, _rtl_tx_complete, skb);
-	_urb->transfer_flags |= URB_ZERO_PACKET;
 	return _urb;
 }
 

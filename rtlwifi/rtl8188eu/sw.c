@@ -182,7 +182,7 @@ static struct rtl_hal_usbint_cfg rtl88eu_interface_cfg = {
 	/* rx */
 	.in_ep_num = RTL88E_USB_BULK_IN_NUM,
 	.rx_urb_num = RTL88E_NUM_RX_URBS,
-	.rx_max_size = 15368,
+	.rx_max_size = 15360,
 	.usb_rx_hdl = rtl8188eu_rx_hdl,
 	.usb_rx_segregate_hdl = NULL, /* rtl8188eu_rx_segregate_hdl; */
 	/* tx */

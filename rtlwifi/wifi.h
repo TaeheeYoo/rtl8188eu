@@ -1334,6 +1334,9 @@ struct rtl_io {
 	void (*write32_async) (struct rtl_priv *rtlpriv, u32 addr, u32 val);
 	void (*writeN_sync) (struct rtl_priv *rtlpriv, u32 addr, void *buf,
 			     u16 len);
+	void (*write8_sync) (struct rtl_priv *rtlpriv, u32 addr, u8 val);
+	void (*write16_sync) (struct rtl_priv *rtlpriv, u32 addr, u16 val);
+	void (*write32_sync) (struct rtl_priv *rtlpriv, u32 addr, u32 val);
 
 	u8(*read8_sync) (struct rtl_priv *rtlpriv, u32 addr);
 	u16(*read16_sync) (struct rtl_priv *rtlpriv, u32 addr);
@@ -2924,7 +2927,10 @@ static inline u32 rtl_read_dword(struct rtl_priv *rtlpriv, u32 addr)
 
 static inline void rtl_write_byte(struct rtl_priv *rtlpriv, u32 addr, u8 val8)
 {
-	rtlpriv->io.write8_async(rtlpriv, addr, val8);
+	if (rtlpriv->io.write8_sync)
+		rtlpriv->io.write8_sync(rtlpriv, addr, val8);
+	else
+		rtlpriv->io.write8_async(rtlpriv, addr, val8);
 
 	if (rtlpriv->cfg->write_readback)
 		rtlpriv->io.read8_sync(rtlpriv, addr);
@@ -2932,7 +2938,10 @@ static inline void rtl_write_byte(struct rtl_priv *rtlpriv, u32 addr, u8 val8)
 
 static inline void rtl_write_word(struct rtl_priv *rtlpriv, u32 addr, u16 val16)
 {
-	rtlpriv->io.write16_async(rtlpriv, addr, val16);
+	if (rtlpriv->io.write16_sync)
+		rtlpriv->io.write16_sync(rtlpriv, addr, val16);
+	else
+		rtlpriv->io.write16_async(rtlpriv, addr, val16);
 
 	if (rtlpriv->cfg->write_readback)
 		rtlpriv->io.read16_sync(rtlpriv, addr);
@@ -2941,7 +2950,10 @@ static inline void rtl_write_word(struct rtl_priv *rtlpriv, u32 addr, u16 val16)
 static inline void rtl_write_dword(struct rtl_priv *rtlpriv,
 				   u32 addr, u32 val32)
 {
-	rtlpriv->io.write32_async(rtlpriv, addr, val32);
+	if (rtlpriv->io.write32_sync)
+		rtlpriv->io.write32_sync(rtlpriv, addr, val32);
+	else
+		rtlpriv->io.write32_async(rtlpriv, addr, val32);
 
 	if (rtlpriv->cfg->write_readback)
 		rtlpriv->io.read32_sync(rtlpriv, addr);
